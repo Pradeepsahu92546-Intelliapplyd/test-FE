@@ -1,8 +1,10 @@
 name: Build-Push&Deploy-xxx
 
 on:
+  pull_request:
+    branches: [ main ]  # Runs tests BEFORE merging
   push:
-    branches: [ main] 
+    branches: [ main ]  # Runs deployment AFTER merging
 
 env:
   REGISTRY_NAME: registry.digitalocean.com/dev-services
@@ -30,3 +32,9 @@ jobs:
   
       - name: Run Angular Internal Tests
         run: npm run test:ci
+
+      # Optional: Only run build/deploy steps if it is a push to main, not a PR test
+      # - name: Build and Push
+      #   if: github.event_name == 'push'
+      #   run: |
+      #     echo "Your build and deployment commands here"
