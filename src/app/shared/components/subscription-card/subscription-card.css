@@ -1,0 +1,12 @@
+/* Equal-height cards: keep them visually consistent regardless of content.
+   Use a comfortable minimum height; the inner layout is flex column so the
+   features list stretches and the CTA sits at the bottom. */
+.card-base {
+  /* Adjust as needed to your content */
+  min-height: 560px;
+}
+
+/* Optional: emphasize recommended card slightly on hover */
+.card-base.border-blue-500:hover {
+  box-shadow: 0 8px 28px rgba(37, 99, 235, 0.12);
+}

@@ -1,0 +1,162 @@
+<div class="container">
+
+  <div class="title">
+    <h3>{{ editingIndex !== null ? 'Edit Address' : 'Address' }}</h3>
+  </div>
+
+  <!-- ── Loading skeleton ── -->
+  <ng-container *ngIf="isLoading">
+    <div *ngFor="let i of [1,2]" style="margin-bottom:12px">
+      <nz-skeleton [nzActive]="true" [nzParagraph]="{ rows: 3 }"></nz-skeleton>
+    </div>
+  </ng-container>
+
+  <!-- ── Empty state ── -->
+  @if (!isLoading && addresses.length === 0 && !showForm) {
+    <div class="empty-container">
+      <nz-empty nzNotFoundContent="No addresses added yet"></nz-empty>
+      <button nz-button nzType="primary" (click)="addAddress()">Add Address Details</button>
+    </div>
+  }
+
+  <!-- ── Form ── -->
+  @if (showForm) {
+    <div class="form-container">
+      <form [formGroup]="addressForm">
+
+        <!-- PIN Code -->
+        <div class="form-row">
+          <div class="form-field">
+            <label>PIN Code</label>
+            <input nz-input formControlName="postalCode" maxlength="6" placeholder="Enter 6-digit PIN" />
+            @if (addressForm.get('postalCode')?.touched && addressForm.get('postalCode')?.invalid) {
+              <div class="error">
+                <span *ngIf="addressForm.get('postalCode')?.errors?.['required']">PIN code is required</span>
+                <span *ngIf="addressForm.get('postalCode')?.errors?.['pattern']">Enter a valid 6-digit PIN code</span>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- City & State -->
+        <div class="form-row">
+          <div class="form-field">
+            <label>City</label>
+            <input nz-input formControlName="city" placeholder="Enter city name" />
+            @if (addressForm.get('city')?.touched && addressForm.get('city')?.invalid) {
+              <div class="error">
+                <span *ngIf="addressForm.get('city')?.errors?.['required']">City is required</span>
+              </div>
+            }
+          </div>
+          <div class="form-field">
+            <label>State</label>
+            <input nz-input formControlName="state" placeholder="Enter state name" />
+            @if (addressForm.get('state')?.touched && addressForm.get('state')?.invalid) {
+              <div class="error">
+                <span *ngIf="addressForm.get('state')?.errors?.['required']">State is required</span>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Street Address 1 & 2 -->
+        <div class="form-row">
+          <div class="form-field">
+            <label>Street Address 1</label>
+            <input nz-input formControlName="streetAddress1" placeholder="e.g. 27th Main, 7th Cross Rd" />
+            @if (addressForm.get('streetAddress1')?.touched && addressForm.get('streetAddress1')?.invalid) {
+              <div class="error">
+                <span *ngIf="addressForm.get('streetAddress1')?.errors?.['required']">Street Address 1 is required</span>
+              </div>
+            }
+          </div>
+          <div class="form-field">
+            <label>Street Address 2 <span class="auto-fill-hint">(optional)</span></label>
+            <input nz-input formControlName="streetAddress2" placeholder="e.g. HSR Layout" />
+          </div>
+        </div>
+
+        <!-- Country -->
+        <div class="form-row">
+          <div class="form-field">
+            <label>Country</label>
+            <nz-select formControlName="country" style="width:100%">
+              <nz-option nzValue="India" nzLabel="India"></nz-option>
+            </nz-select>
+            @if (addressForm.get('country')?.touched && addressForm.get('country')?.invalid) {
+              <div class="error">
+                <span *ngIf="addressForm.get('country')?.errors?.['required']">Country is required</span>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Address Type tags -->
+        <div class="form-row">
+          <div class="tags">
+            <nz-tag
+              [nzChecked]="addressForm.get('addressType')?.value === 'Office'"
+              (click)="addressForm.get('addressType')?.setValue('Office')">
+              <span nz-icon nzType="insert-row-right"></span> Office
+            </nz-tag>
+            <nz-tag
+              [nzChecked]="addressForm.get('addressType')?.value === 'Home'"
+              (click)="addressForm.get('addressType')?.setValue('Home')">
+              <span nz-icon nzType="home"></span> Home
+            </nz-tag>
+          </div>
+        </div>
+
+        <!-- Buttons -->
+        <div class="btn-group">
+          <button nz-button nzType="default" (click)="cancelForm()">Cancel</button>
+          <button nz-button nzType="primary" [nzLoading]="isSaving" (click)="saveAddress()">
+            {{ editingIndex !== null ? 'Update' : 'Save' }}
+          </button>
+        </div>
+
+      </form>
+    </div>
+  }
+
+  <!-- ── Address Cards ── -->
+  @if (!isLoading && addresses.length > 0 && !showForm) {
+    <div class="list-container">
+
+      @for (addr of addresses; let i = $index; track addr.id) {
+        <div class="address-card">
+          <div class="details">
+            <div class="name">
+              <i nz-icon nzType="environment" nzTheme="fill" class="!text-[#1098FF]"></i>
+              <!-- city is now correctly mapped from API d.city -->
+              <b class="text-black">{{ addr.city || '—' }}</b>
+            </div>
+            <div class="card-actions">
+              <button nz-button nzType="link" (click)="editAddress(i)">
+                <i nz-icon nzType="edit"></i> Edit
+              </button>
+              <button nz-button nzType="link" nzDanger (click)="deleteAddress(i)">
+                <i nz-icon nzType="delete"></i> Delete
+              </button>
+            </div>
+          </div>
+
+          <!-- fullAddress: now correctly mapped from faddress or rebuilt -->
+          <p class="full-addr">{{ addr.fullAddress || '—' }}</p>
+
+          <p>
+            <nz-tag nzColor="blue">
+              <!-- addressType: now correctly mapped from API d.type via normaliseType() -->
+              <span nz-icon [nzType]="addr.addressType === 'Home' ? 'home' : 'insert-row-right'"></span>
+              <span>{{ addr.addressType || 'Office' }}</span>
+            </nz-tag>
+          </p>
+        </div>
+      }
+
+      <button nz-button nzType="primary" (click)="addAddress()">+ Add Address</button>
+    </div>
+  }
+
+</div>

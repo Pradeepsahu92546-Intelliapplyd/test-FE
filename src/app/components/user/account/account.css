@@ -1,0 +1,55 @@
+.preferences-container {
+  background: #fff;
+  padding: 10px 16px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.subtitle {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 20px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.label {
+  flex: 0 0 150px;
+  font-weight: 500;
+  color: #333;
+}
+
+.select-box {
+  flex: 1;
+}
+
+.toggle-container {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.desc {
+  font-size: 13px;
+  color: #888;
+  margin: 0;
+}
+.drop{
+    display: flex;
+    width:100%;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+.drop input{
+    flex: 2;
+}
+
+.headings h3{
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}

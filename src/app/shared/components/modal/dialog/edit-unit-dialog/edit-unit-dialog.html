@@ -1,0 +1,57 @@
+<nz-modal
+  [(nzVisible)]="isVisible"
+  [nzTitle]="modalTitle"
+  (nzOnCancel)="handleCancel()"
+  [nzFooter]="modalFooter"
+>
+  <!-- Custom Title with Subtitle -->
+  <ng-template #modalTitle>
+    <div class="flex flex-col">
+      <span class="text-lg font-semibold">Edit unit</span>
+      <span class="text-sm font-normal text-gray-500">Change unit description and default type</span>
+    </div>
+  </ng-template>
+
+  <ng-container *nzModalContent>
+    <form [formGroup]="editUnitForm" class="flex flex-col gap-6 py-2">
+      
+      <!-- Unit Name (Disabled for view only) -->
+      <div>
+        <label class="block font-medium mb-2 text-gray-700">Unit Name</label>
+        <input 
+          nz-input 
+          formControlName="unitName" 
+          placeholder="Unit name" 
+          [disabled]="true"
+        />
+      </div>
+
+      <!-- Description -->
+      <div>
+        <label class="block font-medium mb-2 text-gray-700">Description</label>
+        <input 
+          nz-input 
+          formControlName="description" 
+          placeholder="Enter description" 
+        />
+      </div>
+
+      <!-- Set As Default Toggle -->
+      <div class="flex justify-between items-center">
+        <span class="text-gray-700 font-medium">Set As Default unit</span>
+        <nz-switch formControlName="isDefault"></nz-switch>
+      </div>
+      
+    </form>
+  </ng-container>
+
+  <!-- Footer -->
+  <ng-template #modalFooter>
+    <div class="flex justify-end gap-2">
+      <button nz-button nzType="default" (click)="handleCancel()" class="px-6">Cancel</button>
+      <button nz-button nzType="primary" (click)="handleUpdate()" class="px-6 bg-blue-600">Update</button>
+    </div>
+  </ng-template>
+</nz-modal>
+
+

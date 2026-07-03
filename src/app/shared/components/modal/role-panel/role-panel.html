@@ -1,0 +1,144 @@
+<!-- role-panel.html -->
+
+<div class="rp-panel">
+
+  <!-- Header -->
+  <div class="rp-header">
+    <div>
+      <h3 class="rp-title">{{ panelTitle }}</h3>
+      @if (panelSubtitle) {
+        <p class="rp-subtitle">{{ panelSubtitle }}</p>
+      }
+      @if (!isCreate && role) {
+        <nz-tag [nzColor]="tagColor" class="rp-tag">{{ tagLabel }}</nz-tag>
+      }
+    </div>
+    <button class="rp-close-btn" (click)="onClose()">
+      <span nz-icon nzType="close"></span>
+    </button>
+  </div>
+
+  <!-- Body -->
+  <div class="rp-body">
+    <form [formGroup]="form">
+
+      <!-- Role name -->
+      <div class="rp-field">
+        <label class="rp-label">Role name</label>
+        <input
+          nz-input
+          formControlName="roleName"
+          [placeholder]="isCreate ? 'Enter Unique custom role name' : ''"
+          [class.rp-readonly]="isReadOnly"
+        />
+        @if (f['roleName'].touched && f['roleName'].errors?.['required']) {
+          <span class="rp-error">Role name is required</span>
+        }
+      </div>
+
+      <!-- Description -->
+      <div class="rp-field" style="margin-top: 16px;">
+        <label class="rp-label">Description (Explain of custom role)</label>
+        <input
+          nz-input
+          formControlName="description"
+          [placeholder]="isCreate ? 'Description (mandatory)' : ''"
+          [class.rp-readonly]="isReadOnly"
+        />
+        @if (f['description'].touched && f['description'].errors?.['required']) {
+          <span class="rp-error">Description is required</span>
+        }
+      </div>
+
+      <!-- Predefined roles checkboxes — custom roles + create mode -->
+      @if (isCreate || (role && role.isCustom)) {
+        <nz-collapse class="rp-collapse" [nzBordered]="false" style="margin-top: 16px;" >
+          <nz-collapse-panel nzHeader="Predefined Roles" [nzActive]="true"  class="rp-label">
+
+            @if (isLoadingRoles) {
+              <nz-skeleton [nzActive]="true" [nzParagraph]="{ rows: 3 }"></nz-skeleton>
+            }
+
+            @if (!isLoadingRoles) {
+              <div class="rp-checkbox-list">
+                @for (pr of predefinedRoles; track pr.roleId) {
+                  <div
+                    class="rp-checkbox-item"
+                    [class.rp-disabled]="isReadOnly"
+                    (click)="toggleRole(pr.roleId)"
+                  >
+                    <div class="rp-checkbox" [class.rp-checked]="isSelected(pr.roleId)">
+                      @if (isSelected(pr.roleId)) {
+                        <span nz-icon nzType="check" nzTheme="outline"></span>
+                      }
+                    </div>
+                    <div class="rp-checkbox-info">
+                      <span class="rp-checkbox-name">{{ pr.roleName }}</span>
+                      <span class="rp-checkbox-desc">{{ pr.description }}</span>
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+
+          </nz-collapse-panel>
+        </nz-collapse>
+      }
+    </form>
+
+    <!-- Meta -->
+    @if (!isCreate && role) {
+      <div class="rp-meta">
+        <span>Created: {{ role.createdAt | date:'M/d/yyyy, h:mm:ss a' }}</span>
+        @if (role.isCustom) {
+          <span>Last update: {{ role.createdAt | date:'M/d/yyyy, h:mm:ss a' }}</span>
+        }
+        @if (!role.isCustom) {
+          <span class="rp-meta-note">This is a predefined role and cannot be modified.</span>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- ─── Footer ──────────────────────────────────────────────────────────── -->
+  <div class="rp-footer">
+
+    <!-- CREATE mode -->
+    @if (isCreate) {
+      <button nz-button (click)="onClose()">Cancel</button>
+      <button nz-button nzType="primary" [nzLoading]="isSaving" (click)="createRole()">
+        Create Role
+      </button>
+    }
+
+    <!-- DETAILS — PREDEFINED: Clone only -->
+    @if (mode === 'details' && !isInlineEditing && role && isPredefined) {
+      <button nz-button [nzLoading]="isCloning" (click)="cloneRole()">Clone</button>
+    }
+
+    <!-- DETAILS — CUSTOM (read view): Clone + Edit + Delete -->
+    @if (mode === 'details' && !isInlineEditing && role && !isPredefined) {
+      <button nz-button [nzLoading]="isCloning" (click)="cloneRole()">Clone</button>
+      <button nz-button (click)="enableInlineEdit()">Edit</button>
+      <button nz-button nzDanger [nzLoading]="isDeleting" (click)="deleteRole()">Delete Role</button>
+    }
+
+    <!-- DETAILS — CUSTOM (inline edit active): Clone + Cancel + Update + Delete -->
+    @if (mode === 'details' && isInlineEditing) {
+      <button nz-button [nzLoading]="isCloning" (click)="cloneRole()">Clone</button>
+      <button nz-button (click)="cancelInlineEdit()">Cancel</button>
+      <button nz-button nzType="primary" [nzLoading]="isSaving" (click)="updateRole()">Update</button>
+      <button nz-button nzDanger [nzLoading]="isDeleting" (click)="deleteRole()">Delete Role</button>
+    }
+
+    <!-- EDIT/MODIFY mode (opened via Modify from table menu): Clone + Update + Delete -->
+    @if (mode === 'edit') {
+      <button nz-button [nzLoading]="isCloning" (click)="cloneRole()">Clone</button>
+      <button nz-button nzType="primary" [nzLoading]="isSaving" (click)="updateRole()">Update</button>
+      <button nz-button nzDanger [nzLoading]="isDeleting" (click)="deleteRole()">Delete Role</button>
+    }
+
+  </div>
+</div>
+
+<app-confirmation #confirmDialog></app-confirmation>

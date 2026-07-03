@@ -1,0 +1,60 @@
+.form-field {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 16px;
+}
+
+.form-field label {
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 6px;
+  color: #333;
+}
+.default label{
+   font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 6px;
+  margin-right: 10px;
+  color: #333;
+}
+
+.card-input {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.card-input input {
+  flex: 1;
+}
+
+.visa-logo {
+  width: 40px;
+  margin-left: 8px;
+}
+
+.row {
+  display: flex;
+  gap: 12px;
+}
+
+.half {
+  flex: 1;
+}
+
+.footer-btn {
+  text-align: right;
+  margin-top: 20px;
+}
+
+.add-btn {
+  background: #1677ff;
+  border-radius: 6px;
+}
+
+.error {
+  color: red;
+  font-size: 12px;
+  margin-top: 4px;
+}
+

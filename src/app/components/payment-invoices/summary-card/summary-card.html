@@ -1,0 +1,18 @@
+<div class="right">
+        <nz-card nzTitle="Order Summary">
+            <div class="summary-row">
+                <span>Balance Amount</span>
+                <span>₹{{ balanceAmount }}</span>
+            </div>
+            <div class="summary-row">
+                <span>Tax</span>
+                <span>₹{{ tax }}</span>
+            </div>
+            <nz-divider></nz-divider>
+            <div class="summary-row total">
+                <span>Total</span>
+                <span class="total-money">₹{{ total }}</span>
+            </div>
+            <button nz-button nzType="primary" block class="mt-2" (click)="payNow()">Pay</button>
+        </nz-card>
+    </div>

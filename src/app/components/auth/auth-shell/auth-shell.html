@@ -1,0 +1,30 @@
+<div class="relative min-h-screen bg-gray-50 flex flex-col gap-[35.5px]">
+
+  <div>
+    <!-- Heading -->
+    <div class="top-heading py-[10px]">
+      <img src="/Udvavisk_logo.png" alt="Logo" class="w-fit h-fit object-cover pl-[20px] py-0" />
+      <div class="logo-title py-auto">
+        Simulysis
+      </div>
+    </div>
+
+    <nz-divider nzSize="small" />
+  </div>
+
+  <!-- Register/Login toggle Form -->
+  <div class="flex flex-1 justify-center items-start pt-9 pb-10">
+    <div class="w-full max-w-xl">
+      <div class="bg-white shadow rounded-xl p-6">
+        <nz-tabs class="auth-tabs !w-full" [(nzSelectedIndex)]="tabIndex" [nzTabBarGutter]="0">
+          <nz-tab nzTitle="Sign Up">
+            <app-register (switchToLogin)="tabIndex.set(1)"></app-register>
+          </nz-tab>
+          <nz-tab nzTitle="Login">
+            <app-login (switchToRegister)="tabIndex.set(0)"></app-login>
+          </nz-tab>
+        </nz-tabs>
+      </div>
+    </div>
+  </div>
+</div>

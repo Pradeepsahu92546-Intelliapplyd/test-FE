@@ -1,0 +1,25 @@
+<nz-modal
+  [(nzVisible)]="isVisible"
+  [nzTitle]="title"
+  [nzOkText]="okText"
+  [nzCancelText]="cancelText"
+  (nzOnCancel)="handleCancel()"
+  (nzOnOk)="handleOk()"
+>
+  <ng-container *nzModalContent>
+    <p>{{ content }}</p>
+    <form [formGroup]="emailForm">
+      <input nz-input placeholder="Basic usage" formControlName="email" />
+
+      @if (submitted && emailForm.get('email')?.invalid) {
+        <div class="text-red-600 mt-1 text-sm">
+          {{ getEmailErrorTip() }}
+        </div>
+      }
+    </form>
+  </ng-container>
+</nz-modal>
+<!--
+  Note: The above code defines a modal dialog component using Angular and NG-ZORRO.
+  It includes a form with email input and validation error display.
+-->

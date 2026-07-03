@@ -1,0 +1,73 @@
+<div class="container">
+    <h1>Transaction History</h1>
+
+    <!-- Filter Section -->
+    <div class="filter-section">
+        <div class="search-box">
+            <nz-input-group [nzPrefix]="prefixIconSearch">
+                <input type="text" nz-input placeholder="Search transactions..." [(ngModel)]="searchText"
+                    (input)="onSearch()" />
+            </nz-input-group>
+            <ng-template #prefixIconSearch>
+                <nz-icon nzType="search"></nz-icon>
+            </ng-template>
+        </div>
+
+        <div class="filter-row">
+            <label>Type</label>
+            <select [(ngModel)]="selectedType" (change)="applyFilter()">
+                <option>All</option>
+                <option>Others</option>
+                <option>Any</option>
+                <option>bill</option>
+            </select>
+
+            <label>Status</label>
+            <select [(ngModel)]="selectedStatus" (change)="applyFilter()">
+                <option>All</option>
+                <option>Success</option>
+                <option>Pending</option>
+                <option>Failed</option>
+            </select>
+
+            <button nz-button nzType="primary">
+                <nz-icon nzType="calendar"></nz-icon> Latest 30 Days
+            </button>
+
+            <button nz-button nzType="primary">
+                <nz-icon nzType="filter"></nz-icon> Filter
+            </button>
+        </div>
+
+    </div>
+
+    <!-- Table -->
+    <nz-table #basicTable [nzData]="filteredTransactions">
+        <thead>
+            <tr>
+                <th>Payment Id</th>
+                <th>Invoice Number</th>
+                <th>Date</th>
+                <th>Type</th>
+                <th>Amount</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (data of basicTable.data; track data) {
+            <tr>
+                <td>{{ data.id }}</td>
+                <td>{{ data.invoice }}</td>
+                <td>{{ data.date }}</td>
+                <td>{{ data.type }}</td>
+                <td>₹ {{ data.amount }}</td>
+                <td>
+                    <nz-tag [nzColor]="data.color"   class="!text-[12px] !w-18 !flex !items-center !justify-center">
+                        {{ data.status }}
+                    </nz-tag>
+                </td>
+            </tr>
+            }
+        </tbody>
+    </nz-table>
+</div>

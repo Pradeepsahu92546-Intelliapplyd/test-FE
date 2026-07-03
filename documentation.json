@@ -1,0 +1,3240 @@
+{
+    "pipes": [],
+    "interfaces": [
+        {
+            "name": "Addon",
+            "id": "interface-Addon-3f6900a7114abaaf5808c0842cc0714bb94cf308721b1bd2073f1208a86e236efcd11deaf248e3324954085da6b20dc57bb967117d1f331cfdf1f5f7617a949e",
+            "file": "src/app/components/subscriptions/select-addon/select-addon.ts",
+            "deprecated": false,
+            "deprecationMessage": "",
+            "type": "interface",
+            "sourceCode": "import { Component, computed, signal } from '@angular/core';\r\nimport { RouterModule } from '@angular/router';\r\nimport { CommonModule } from '@angular/common';\r\nimport { NzStepsModule } from 'ng-zorro-antd/steps';\r\nimport { NzButtonModule } from 'ng-zorro-antd/button';\r\nimport { NzIconModule } from 'ng-zorro-antd/icon';\r\nimport { NzSelectModule } from 'ng-zorro-antd/select';\r\nimport { NzSwitchModule } from 'ng-zorro-antd/switch';\r\nimport { NzDividerModule } from 'ng-zorro-antd/divider';\r\nimport { NzTableModule } from 'ng-zorro-antd/table';\r\nimport { FormsModule } from '@angular/forms';\r\nimport { NzIconService } from 'ng-zorro-antd/icon';\r\nimport { icons } from '../../../shared/components/sidenav/icons-provider';\r\nimport { NgFor } from '@angular/common';\r\n\r\n\r\ntype Period = 'monthly' | 'annual';\r\n\r\n\r\ninterface Addon {\r\n  id: string;\r\n  name: string;\r\n  pricePerMonth: number; // base price per 1 unit per month\r\n  details: string;\r\n  icon?: string;\r\n}\r\ninterface ChosenAddon {\r\n  id: string;\r\n  quantity: number;\r\n}\r\n\r\n\r\n@Component({\r\n  selector: 'app-select-addon',\r\n  imports: [\r\n    CommonModule,\r\n    FormsModule,\r\n    RouterModule,\r\n    NzStepsModule,\r\n    NzButtonModule,\r\n    NzIconModule,\r\n    NzSelectModule,\r\n    NzSwitchModule,\r\n    NzDividerModule,\r\n    NzTableModule,\r\n  ],\r\n  templateUrl: './select-addon.html',\r\n  styleUrl: './select-addon.css',\r\n})\r\nexport class SelectAddon {\r\n  // Top state\r\n  selectedOrg: string | null = null;\r\n  orgs = ['Acme Corp', 'Globex', 'Innotech'];\r\n  autoRenew = true;\r\n  period = signal<Period>('monthly');\r\n\r\n\r\n  constructor(private iconService: NzIconService) {\r\n    this.iconService.addIcon(...icons);\r\n  }\r\n\r\n\r\n  // Base pro plan pricing\r\n  proMonthly = 1999; // example\r\n  proLine = computed(() =>\r\n    this.period() === 'annual' ? this.proMonthly * 12 : this.proMonthly\r\n  );\r\n\r\n\r\n  // Addons catalog\r\n  addons: Addon[] = [\r\n    {\r\n      id: 'a1',\r\n      name: 'Addon name',\r\n      pricePerMonth: 199,\r\n      details: 'Addons details',\r\n    },\r\n    {\r\n      id: 'a2',\r\n      name: 'Addon name',\r\n      pricePerMonth: 99,\r\n      details: 'Addons details',\r\n    },\r\n  ];\r\n  qtyOptions = [0, 1, 2, 3, 4, 5, 10];\r\n\r\n\r\n  chosen = signal<ChosenAddon[]>([\r\n    { id: 'a1', quantity: 0 },\r\n    { id: 'a2', quantity: 0 },\r\n  ]);\r\n\r\n\r\n  getQty(id: string) {\r\n    return this.chosen().find((x) => x.id === id)?.quantity ?? 0;\r\n  }\r\n  setQty(id: string, q: number) {\r\n    this.chosen.update((list) =>\r\n      list.map((x) => (x.id === id ? { ...x, quantity: q } : x))\r\n    );\r\n  }\r\n\r\n\r\n  add(id: string) {\r\n    // set default quantity to 1 when first adding\r\n    if (this.getQty(id) === 0) this.setQty(id, 1);\r\n  }\r\n\r\n\r\n  increment(id: string) {\r\n    const current = this.getQty(id);\r\n    this.setQty(id, current + 1);\r\n  }\r\n  remove(id: string) {\r\n    this.setQty(id, 0);\r\n  }\r\n\r\n\r\n  // Addons totals\r\n  addonMonthlyTotal = computed(() =>\r\n    this.chosen().reduce((sum, c) => {\r\n      const a = this.addons.find((z) => z.id === c.id);\r\n      return a ? sum + a.pricePerMonth * c.quantity : sum;\r\n    }, 0)\r\n  );\r\n  addonsLine = computed(() =>\r\n    this.period() === 'annual'\r\n      ? this.addonMonthlyTotal() * 12\r\n      : this.addonMonthlyTotal()\r\n  );\r\n\r\n\r\n  subtotal = computed(() => this.proLine() + this.addonsLine());\r\n\r\n\r\n  // --- Billing detail lines (each selected add-on)\r\n  detailAddons = computed(() => {\r\n    const period = this.period();\r\n    const multiplier = period === 'annual' ? 12 : 1;\r\n    const suffix = period === 'annual' ? '/yr' : '/mo';\r\n\r\n\r\n    return this.chosen()\r\n      .filter(c => c.quantity > 0)\r\n      .map(c => {\r\n        const a = this.addons.find(z => z.id === c.id)!;\r\n        const unit = a.pricePerMonth;\r\n        const total = unit * c.quantity * multiplier;\r\n        return {\r\n          id: a.id,\r\n          name: a.name,\r\n          qty: c.quantity,\r\n          unit,           // monthly unit price\r\n          total,          // per selected period\r\n          suffix          // '/mo' or '/yr' for display\r\n        };\r\n      });\r\n  });\r\n\r\n\r\n  next() {\r\n    // navigate to payment or emit event\r\n    console.log('Proceed to payment details', {\r\n      org: this.selectedOrg,\r\n      autoRenew: this.autoRenew,\r\n      period: this.period(),\r\n      chosen: this.chosen(),\r\n      subtotal: this.subtotal(),\r\n    });\r\n  }\r\n  goBack() {\r\n    history.back();\r\n  }\r\n}\r\n\r\n\r\n\r\n",
+            "properties": [
+                {
+                    "name": "details",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "string",
+                    "indexKey": "",
+                    "optional": false,
+                    "description": "",
+                    "line": 24
+                },
+                {
+                    "name": "icon",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "string",
+                    "indexKey": "",
+                    "optional": true,
+                    "description": "",
+                    "line": 25
+                },
+                {
+                    "name": "id",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "string",
+                    "indexKey": "",
+                    "optional": false,
+                    "description": "",
+                    "line": 21
+                },
+                {
+                    "name": "name",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "string",
+                    "indexKey": "",
+                    "optional": false,
+                    "description": "",
+                    "line": 22
+                },
+                {
+                    "name": "pricePerMonth",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "number",
+                    "indexKey": "",
+                    "optional": false,
+                    "description": "",
+                    "line": 23
+                }
+            ],
+            "indexSignatures": [],
+            "kind": 171,
+            "methods": [],
+            "extends": []
+        },
+        {
+            "name": "ChosenAddon",
+            "id": "interface-ChosenAddon-3f6900a7114abaaf5808c0842cc0714bb94cf308721b1bd2073f1208a86e236efcd11deaf248e3324954085da6b20dc57bb967117d1f331cfdf1f5f7617a949e",
+            "file": "src/app/components/subscriptions/select-addon/select-addon.ts",
+            "deprecated": false,
+            "deprecationMessage": "",
+            "type": "interface",
+            "sourceCode": "import { Component, computed, signal } from '@angular/core';\r\nimport { RouterModule } from '@angular/router';\r\nimport { CommonModule } from '@angular/common';\r\nimport { NzStepsModule } from 'ng-zorro-antd/steps';\r\nimport { NzButtonModule } from 'ng-zorro-antd/button';\r\nimport { NzIconModule } from 'ng-zorro-antd/icon';\r\nimport { NzSelectModule } from 'ng-zorro-antd/select';\r\nimport { NzSwitchModule } from 'ng-zorro-antd/switch';\r\nimport { NzDividerModule } from 'ng-zorro-antd/divider';\r\nimport { NzTableModule } from 'ng-zorro-antd/table';\r\nimport { FormsModule } from '@angular/forms';\r\nimport { NzIconService } from 'ng-zorro-antd/icon';\r\nimport { icons } from '../../../shared/components/sidenav/icons-provider';\r\nimport { NgFor } from '@angular/common';\r\n\r\n\r\ntype Period = 'monthly' | 'annual';\r\n\r\n\r\ninterface Addon {\r\n  id: string;\r\n  name: string;\r\n  pricePerMonth: number; // base price per 1 unit per month\r\n  details: string;\r\n  icon?: string;\r\n}\r\ninterface ChosenAddon {\r\n  id: string;\r\n  quantity: number;\r\n}\r\n\r\n\r\n@Component({\r\n  selector: 'app-select-addon',\r\n  imports: [\r\n    CommonModule,\r\n    FormsModule,\r\n    RouterModule,\r\n    NzStepsModule,\r\n    NzButtonModule,\r\n    NzIconModule,\r\n    NzSelectModule,\r\n    NzSwitchModule,\r\n    NzDividerModule,\r\n    NzTableModule,\r\n  ],\r\n  templateUrl: './select-addon.html',\r\n  styleUrl: './select-addon.css',\r\n})\r\nexport class SelectAddon {\r\n  // Top state\r\n  selectedOrg: string | null = null;\r\n  orgs = ['Acme Corp', 'Globex', 'Innotech'];\r\n  autoRenew = true;\r\n  period = signal<Period>('monthly');\r\n\r\n\r\n  constructor(private iconService: NzIconService) {\r\n    this.iconService.addIcon(...icons);\r\n  }\r\n\r\n\r\n  // Base pro plan pricing\r\n  proMonthly = 1999; // example\r\n  proLine = computed(() =>\r\n    this.period() === 'annual' ? this.proMonthly * 12 : this.proMonthly\r\n  );\r\n\r\n\r\n  // Addons catalog\r\n  addons: Addon[] = [\r\n    {\r\n      id: 'a1',\r\n      name: 'Addon name',\r\n      pricePerMonth: 199,\r\n      details: 'Addons details',\r\n    },\r\n    {\r\n      id: 'a2',\r\n      name: 'Addon name',\r\n      pricePerMonth: 99,\r\n      details: 'Addons details',\r\n    },\r\n  ];\r\n  qtyOptions = [0, 1, 2, 3, 4, 5, 10];\r\n\r\n\r\n  chosen = signal<ChosenAddon[]>([\r\n    { id: 'a1', quantity: 0 },\r\n    { id: 'a2', quantity: 0 },\r\n  ]);\r\n\r\n\r\n  getQty(id: string) {\r\n    return this.chosen().find((x) => x.id === id)?.quantity ?? 0;\r\n  }\r\n  setQty(id: string, q: number) {\r\n    this.chosen.update((list) =>\r\n      list.map((x) => (x.id === id ? { ...x, quantity: q } : x))\r\n    );\r\n  }\r\n\r\n\r\n  add(id: string) {\r\n    // set default quantity to 1 when first adding\r\n    if (this.getQty(id) === 0) this.setQty(id, 1);\r\n  }\r\n\r\n\r\n  increment(id: string) {\r\n    const current = this.getQty(id);\r\n    this.setQty(id, current + 1);\r\n  }\r\n  remove(id: string) {\r\n    this.setQty(id, 0);\r\n  }\r\n\r\n\r\n  // Addons totals\r\n  addonMonthlyTotal = computed(() =>\r\n    this.chosen().reduce((sum, c) => {\r\n      const a = this.addons.find((z) => z.id === c.id);\r\n      return a ? sum + a.pricePerMonth * c.quantity : sum;\r\n    }, 0)\r\n  );\r\n  addonsLine = computed(() =>\r\n    this.period() === 'annual'\r\n      ? this.addonMonthlyTotal() * 12\r\n      : this.addonMonthlyTotal()\r\n  );\r\n\r\n\r\n  subtotal = computed(() => this.proLine() + this.addonsLine());\r\n\r\n\r\n  // --- Billing detail lines (each selected add-on)\r\n  detailAddons = computed(() => {\r\n    const period = this.period();\r\n    const multiplier = period === 'annual' ? 12 : 1;\r\n    const suffix = period === 'annual' ? '/yr' : '/mo';\r\n\r\n\r\n    return this.chosen()\r\n      .filter(c => c.quantity > 0)\r\n      .map(c => {\r\n        const a = this.addons.find(z => z.id === c.id)!;\r\n        const unit = a.pricePerMonth;\r\n        const total = unit * c.quantity * multiplier;\r\n        return {\r\n          id: a.id,\r\n          name: a.name,\r\n          qty: c.quantity,\r\n          unit,           // monthly unit price\r\n          total,          // per selected period\r\n          suffix          // '/mo' or '/yr' for display\r\n        };\r\n      });\r\n  });\r\n\r\n\r\n  next() {\r\n    // navigate to payment or emit event\r\n    console.log('Proceed to payment details', {\r\n      org: this.selectedOrg,\r\n      autoRenew: this.autoRenew,\r\n      period: this.period(),\r\n      chosen: this.chosen(),\r\n      subtotal: this.subtotal(),\r\n    });\r\n  }\r\n  goBack() {\r\n    history.back();\r\n  }\r\n}\r\n\r\n\r\n\r\n",
+            "properties": [
+                {
+                    "name": "id",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "string",
+                    "indexKey": "",
+                    "optional": false,
+                    "description": "",
+                    "line": 28
+                },
+                {
+                    "name": "quantity",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "number",
+                    "indexKey": "",
+                    "optional": false,
+                    "description": "",
+                    "line": 29
+                }
+            ],
+            "indexSignatures": [],
+            "kind": 171,
+            "methods": [],
+            "extends": []
+        },
+        {
+            "name": "ForgotPasswordRequest",
+            "id": "interface-ForgotPasswordRequest-35b9917cdd60e4fc91c6090a6e2aff149cd79717ba5708b96724d66d7168c551fe6285f86e981ea732da6e81dbaae84aea1e990c83df145421ee2dd577fd388b",
+            "file": "src/app/models/interfaces/user.interface.ts",
+            "deprecated": false,
+            "deprecationMessage": "",
+            "type": "interface",
+            "sourceCode": "import { AccountType } from \"../enums/account-type.enum\";\r\nimport { UserType } from \"../enums/user-type.enum\";\r\n\r\nexport interface RegisterRequest {\r\n  firstName: string;\r\n  lastName: string;\r\n  email: string;\r\n  phone: string;\r\n  userType: UserType;\r\n  accountType: AccountType;\r\n  password: string;\r\n  confirmPassword: string;\r\n  termsAccepted: boolean;\r\n}\r\n\r\nexport interface LoginRequest {\r\n  email: string;\r\n  password: string;\r\n}\r\n\r\nexport interface ForgotPasswordRequest {\r\n    email: string;\r\n}",
+            "properties": [
+                {
+                    "name": "email",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "string",
+                    "indexKey": "",
+                    "optional": false,
+                    "description": "",
+                    "line": 22
+                }
+            ],
+            "indexSignatures": [],
+            "kind": 171,
+            "methods": [],
+            "extends": []
+        },
+        {
+            "name": "LoginRequest",
+            "id": "interface-LoginRequest-35b9917cdd60e4fc91c6090a6e2aff149cd79717ba5708b96724d66d7168c551fe6285f86e981ea732da6e81dbaae84aea1e990c83df145421ee2dd577fd388b",
+            "file": "src/app/models/interfaces/user.interface.ts",
+            "deprecated": false,
+            "deprecationMessage": "",
+            "type": "interface",
+            "sourceCode": "import { AccountType } from \"../enums/account-type.enum\";\r\nimport { UserType } from \"../enums/user-type.enum\";\r\n\r\nexport interface RegisterRequest {\r\n  firstName: string;\r\n  lastName: string;\r\n  email: string;\r\n  phone: string;\r\n  userType: UserType;\r\n  accountType: AccountType;\r\n  password: string;\r\n  confirmPassword: string;\r\n  termsAccepted: boolean;\r\n}\r\n\r\nexport interface LoginRequest {\r\n  email: string;\r\n  password: string;\r\n}\r\n\r\nexport interface ForgotPasswordRequest {\r\n    email: string;\r\n}",
+            "properties": [
+                {
+                    "name": "email",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "string",
+                    "indexKey": "",
+                    "optional": false,
+                    "description": "",
+                    "line": 17
+                },
+                {
+                    "name": "password",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "string",
+                    "indexKey": "",
+                    "optional": false,
+                    "description": "",
+                    "line": 18
+                }
+            ],
+            "indexSignatures": [],
+            "kind": 171,
+            "methods": [],
+            "extends": []
+        },
+        {
+            "name": "MockUser",
+            "id": "interface-MockUser-43c7caee0d83dde9bd6ef8c941f1725f223b51bb2b435eaa6ca4db4677dc2d6cda4819c2ce97fa433b3930fd6584f21155081dbdc679e71f84d2e3eff8d68ef5",
+            "file": "src/app/services/auth/auth.ts",
+            "deprecated": false,
+            "deprecationMessage": "",
+            "type": "interface",
+            "sourceCode": "import { Injectable, Inject, PLATFORM_ID } from '@angular/core';\r\nimport { BehaviorSubject, Observable, of, throwError } from 'rxjs';\r\nimport { delay } from 'rxjs/operators';\r\nimport { isPlatformBrowser } from '@angular/common';\r\nimport { HttpClient } from \"@angular/common/http\";\r\n\r\n\r\n\r\nexport interface MockUser { // for mock user\r\n  id: string;\r\n  email: string;\r\n  firstName?: string;\r\n  lastName?: string;\r\n  token: string;\r\n}\r\n\r\n\r\n@Injectable({\r\n  providedIn: 'root'\r\n})\r\nexport class Auth {\r\n  // Hold current user state\r\n  // when http require here we can add http\r\n  private userSubject = new BehaviorSubject<MockUser | null>(this.getUserFromStorage());\r\n  user$ = this.userSubject.asObservable();\r\n\r\n  constructor(@Inject(PLATFORM_ID) private platformId: Object, private http: HttpClient) {}\r\n\r\n\r\n\r\n  /** Simulate backend login */\r\n  login(email: string, password: string): Observable<MockUser> {\r\n    // mork data : replace this with your actual backend API call\r\n    if (email === 'user@example.com' && password === 'password123') {\r\n      const mockUser: MockUser = {\r\n        id: '1',\r\n        email,\r\n        firstName: 'Demo',\r\n        lastName: 'User',\r\n        token: 'mock-jwt-token'\r\n      };\r\n      this.setSession(mockUser);\r\n      return of(mockUser).pipe(delay(500)); // simulate network delay\r\n    }\r\n    // Invalid login\r\n    return throwError(() => new Error('Invalid credentials')).pipe(delay(500));\r\n  }\r\n\r\n\r\n\r\n  /** Simulate backend registration */\r\n  register(formData: any): Observable<MockUser> {\r\n    // Demo: accept any registration and \"log the user in\"\r\n    const newUser: MockUser = {\r\n      id: String(Math.random()),\r\n      email: formData.email,\r\n      firstName: formData.firstName,\r\n      lastName: formData.lastName,\r\n      token: 'mock-jwt-token'\r\n    };\r\n    this.setSession(newUser);\r\n    return of(newUser).pipe(delay(700));\r\n  }\r\n\r\n\r\n\r\n  /** Log out the user */\r\n  logout() {\r\n    this.clearSession();\r\n    this.userSubject.next(null);\r\n  }\r\n\r\n\r\n  /** Get currently logged in user */\r\n  getCurrentUser(): MockUser | null {\r\n    return this.userSubject.value;\r\n  }\r\n\r\n\r\n\r\n  /** Whether user is logged in */\r\n  isLoggedIn(): boolean {\r\n    return !!this.getCurrentUser();\r\n  }\r\n\r\n\r\n\r\n  // Session helpers (localStorage + cookie)\r\n  private setSession(user: MockUser) {\r\n    if (isPlatformBrowser(this.platformId)) {\r\n      localStorage.setItem('currentUser', JSON.stringify(user));\r\n\r\n      // Set cookie (expires in 7 days)\r\n      const d = new Date();\r\n      d.setTime(d.getTime() + 7 * 24 * 60 * 60 * 1000);\r\n      document.cookie = `token=${user.token};expires=${d.toUTCString()};path=/`;\r\n    }\r\n    this.userSubject.next(user);\r\n  }\r\n\r\n\r\n  /** Get user from localStorage */\r\n  private getUserFromStorage(): MockUser | null {\r\n    if (isPlatformBrowser(this.platformId)) {\r\n      const json = localStorage.getItem('currentUser');\r\n      if (json) {\r\n        try {\r\n          return JSON.parse(json) as MockUser;\r\n        } catch {\r\n          return null;\r\n        }\r\n      }\r\n    }\r\n    return null;\r\n  }\r\n\r\n  private clearSession() {\r\n    if (isPlatformBrowser(this.platformId)) {\r\n      localStorage.removeItem('currentUser');\r\n      this.clearCookie('token');\r\n    }\r\n  }\r\n\r\n  private clearCookie(name: string) {\r\n    if (isPlatformBrowser(this.platformId)) { // Only available in the browser\r\n      document.cookie = name + '=; Max-Age=0; path=/;';\r\n    }\r\n  }\r\n}\r\n",
+            "properties": [
+                {
+                    "name": "email",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "string",
+                    "indexKey": "",
+                    "optional": false,
+                    "description": "",
+                    "line": 11
+                },
+                {
+                    "name": "firstName",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "string",
+                    "indexKey": "",
+                    "optional": true,
+                    "description": "",
+                    "line": 12
+                },
+                {
+                    "name": "id",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "string",
+                    "indexKey": "",
+                    "optional": false,
+                    "description": "",
+                    "line": 10
+                },
+                {
+                    "name": "lastName",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "string",
+                    "indexKey": "",
+                    "optional": true,
+                    "description": "",
+                    "line": 13
+                },
+                {
+                    "name": "token",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "string",
+                    "indexKey": "",
+                    "optional": false,
+                    "description": "",
+                    "line": 14
+                }
+            ],
+            "indexSignatures": [],
+            "kind": 171,
+            "methods": [],
+            "extends": []
+        },
+        {
+            "name": "RegisterRequest",
+            "id": "interface-RegisterRequest-35b9917cdd60e4fc91c6090a6e2aff149cd79717ba5708b96724d66d7168c551fe6285f86e981ea732da6e81dbaae84aea1e990c83df145421ee2dd577fd388b",
+            "file": "src/app/models/interfaces/user.interface.ts",
+            "deprecated": false,
+            "deprecationMessage": "",
+            "type": "interface",
+            "sourceCode": "import { AccountType } from \"../enums/account-type.enum\";\r\nimport { UserType } from \"../enums/user-type.enum\";\r\n\r\nexport interface RegisterRequest {\r\n  firstName: string;\r\n  lastName: string;\r\n  email: string;\r\n  phone: string;\r\n  userType: UserType;\r\n  accountType: AccountType;\r\n  password: string;\r\n  confirmPassword: string;\r\n  termsAccepted: boolean;\r\n}\r\n\r\nexport interface LoginRequest {\r\n  email: string;\r\n  password: string;\r\n}\r\n\r\nexport interface ForgotPasswordRequest {\r\n    email: string;\r\n}",
+            "properties": [
+                {
+                    "name": "accountType",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "AccountType",
+                    "indexKey": "",
+                    "optional": false,
+                    "description": "",
+                    "line": 10
+                },
+                {
+                    "name": "confirmPassword",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "string",
+                    "indexKey": "",
+                    "optional": false,
+                    "description": "",
+                    "line": 12
+                },
+                {
+                    "name": "email",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "string",
+                    "indexKey": "",
+                    "optional": false,
+                    "description": "",
+                    "line": 7
+                },
+                {
+                    "name": "firstName",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "string",
+                    "indexKey": "",
+                    "optional": false,
+                    "description": "",
+                    "line": 5
+                },
+                {
+                    "name": "lastName",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "string",
+                    "indexKey": "",
+                    "optional": false,
+                    "description": "",
+                    "line": 6
+                },
+                {
+                    "name": "password",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "string",
+                    "indexKey": "",
+                    "optional": false,
+                    "description": "",
+                    "line": 11
+                },
+                {
+                    "name": "phone",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "string",
+                    "indexKey": "",
+                    "optional": false,
+                    "description": "",
+                    "line": 8
+                },
+                {
+                    "name": "termsAccepted",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "boolean",
+                    "indexKey": "",
+                    "optional": false,
+                    "description": "",
+                    "line": 13
+                },
+                {
+                    "name": "userType",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "UserType",
+                    "indexKey": "",
+                    "optional": false,
+                    "description": "",
+                    "line": 9
+                }
+            ],
+            "indexSignatures": [],
+            "kind": 171,
+            "methods": [],
+            "extends": []
+        }
+    ],
+    "injectables": [
+        {
+            "name": "Auth",
+            "id": "injectable-Auth-43c7caee0d83dde9bd6ef8c941f1725f223b51bb2b435eaa6ca4db4677dc2d6cda4819c2ce97fa433b3930fd6584f21155081dbdc679e71f84d2e3eff8d68ef5",
+            "file": "src/app/services/auth/auth.ts",
+            "properties": [
+                {
+                    "name": "user$",
+                    "defaultValue": "this.userSubject.asObservable()",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "",
+                    "indexKey": "",
+                    "optional": false,
+                    "description": "",
+                    "line": 25
+                },
+                {
+                    "name": "userSubject",
+                    "defaultValue": "new BehaviorSubject<MockUser | null>(this.getUserFromStorage())",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "",
+                    "indexKey": "",
+                    "optional": false,
+                    "description": "",
+                    "line": 24,
+                    "modifierKind": [
+                        123
+                    ]
+                }
+            ],
+            "methods": [
+                {
+                    "name": "clearCookie",
+                    "args": [
+                        {
+                            "name": "name",
+                            "type": "string",
+                            "deprecated": false,
+                            "deprecationMessage": ""
+                        }
+                    ],
+                    "optional": false,
+                    "returnType": "void",
+                    "typeParameters": [],
+                    "line": 124,
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "modifierKind": [
+                        123
+                    ],
+                    "jsdoctags": [
+                        {
+                            "name": "name",
+                            "type": "string",
+                            "deprecated": false,
+                            "deprecationMessage": "",
+                            "tagName": {
+                                "text": "param"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "clearSession",
+                    "args": [],
+                    "optional": false,
+                    "returnType": "void",
+                    "typeParameters": [],
+                    "line": 117,
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "modifierKind": [
+                        123
+                    ]
+                },
+                {
+                    "name": "getCurrentUser",
+                    "args": [],
+                    "optional": false,
+                    "returnType": "MockUser | null",
+                    "typeParameters": [],
+                    "line": 75,
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "rawdescription": "\nGet currently logged in user",
+                    "description": "<p>Get currently logged in user</p>\n"
+                },
+                {
+                    "name": "getUserFromStorage",
+                    "args": [],
+                    "optional": false,
+                    "returnType": "MockUser | null",
+                    "typeParameters": [],
+                    "line": 103,
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "rawdescription": "\nGet user from localStorage",
+                    "description": "<p>Get user from localStorage</p>\n",
+                    "modifierKind": [
+                        123
+                    ]
+                },
+                {
+                    "name": "isLoggedIn",
+                    "args": [],
+                    "optional": false,
+                    "returnType": "boolean",
+                    "typeParameters": [],
+                    "line": 82,
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "rawdescription": "\nWhether user is logged in",
+                    "description": "<p>Whether user is logged in</p>\n"
+                },
+                {
+                    "name": "login",
+                    "args": [
+                        {
+                            "name": "email",
+                            "type": "string",
+                            "deprecated": false,
+                            "deprecationMessage": ""
+                        },
+                        {
+                            "name": "password",
+                            "type": "string",
+                            "deprecated": false,
+                            "deprecationMessage": ""
+                        }
+                    ],
+                    "optional": false,
+                    "returnType": "Observable<MockUser>",
+                    "typeParameters": [],
+                    "line": 32,
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "rawdescription": "\nSimulate backend login",
+                    "description": "<p>Simulate backend login</p>\n",
+                    "jsdoctags": [
+                        {
+                            "name": "email",
+                            "type": "string",
+                            "deprecated": false,
+                            "deprecationMessage": "",
+                            "tagName": {
+                                "text": "param"
+                            }
+                        },
+                        {
+                            "name": "password",
+                            "type": "string",
+                            "deprecated": false,
+                            "deprecationMessage": "",
+                            "tagName": {
+                                "text": "param"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "logout",
+                    "args": [],
+                    "optional": false,
+                    "returnType": "void",
+                    "typeParameters": [],
+                    "line": 68,
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "rawdescription": "\nLog out the user",
+                    "description": "<p>Log out the user</p>\n"
+                },
+                {
+                    "name": "register",
+                    "args": [
+                        {
+                            "name": "formData",
+                            "type": "any",
+                            "deprecated": false,
+                            "deprecationMessage": ""
+                        }
+                    ],
+                    "optional": false,
+                    "returnType": "Observable<MockUser>",
+                    "typeParameters": [],
+                    "line": 52,
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "rawdescription": "\nSimulate backend registration",
+                    "description": "<p>Simulate backend registration</p>\n",
+                    "jsdoctags": [
+                        {
+                            "name": "formData",
+                            "type": "any",
+                            "deprecated": false,
+                            "deprecationMessage": "",
+                            "tagName": {
+                                "text": "param"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "setSession",
+                    "args": [
+                        {
+                            "name": "user",
+                            "type": "MockUser",
+                            "deprecated": false,
+                            "deprecationMessage": ""
+                        }
+                    ],
+                    "optional": false,
+                    "returnType": "void",
+                    "typeParameters": [],
+                    "line": 89,
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "modifierKind": [
+                        123
+                    ],
+                    "jsdoctags": [
+                        {
+                            "name": "user",
+                            "type": "MockUser",
+                            "deprecated": false,
+                            "deprecationMessage": "",
+                            "tagName": {
+                                "text": "param"
+                            }
+                        }
+                    ]
+                }
+            ],
+            "deprecated": false,
+            "deprecationMessage": "",
+            "description": "",
+            "rawdescription": "\n",
+            "sourceCode": "import { Injectable, Inject, PLATFORM_ID } from '@angular/core';\r\nimport { BehaviorSubject, Observable, of, throwError } from 'rxjs';\r\nimport { delay } from 'rxjs/operators';\r\nimport { isPlatformBrowser } from '@angular/common';\r\nimport { HttpClient } from \"@angular/common/http\";\r\n\r\n\r\n\r\nexport interface MockUser { // for mock user\r\n  id: string;\r\n  email: string;\r\n  firstName?: string;\r\n  lastName?: string;\r\n  token: string;\r\n}\r\n\r\n\r\n@Injectable({\r\n  providedIn: 'root'\r\n})\r\nexport class Auth {\r\n  // Hold current user state\r\n  // when http require here we can add http\r\n  private userSubject = new BehaviorSubject<MockUser | null>(this.getUserFromStorage());\r\n  user$ = this.userSubject.asObservable();\r\n\r\n  constructor(@Inject(PLATFORM_ID) private platformId: Object, private http: HttpClient) {}\r\n\r\n\r\n\r\n  /** Simulate backend login */\r\n  login(email: string, password: string): Observable<MockUser> {\r\n    // mork data : replace this with your actual backend API call\r\n    if (email === 'user@example.com' && password === 'password123') {\r\n      const mockUser: MockUser = {\r\n        id: '1',\r\n        email,\r\n        firstName: 'Demo',\r\n        lastName: 'User',\r\n        token: 'mock-jwt-token'\r\n      };\r\n      this.setSession(mockUser);\r\n      return of(mockUser).pipe(delay(500)); // simulate network delay\r\n    }\r\n    // Invalid login\r\n    return throwError(() => new Error('Invalid credentials')).pipe(delay(500));\r\n  }\r\n\r\n\r\n\r\n  /** Simulate backend registration */\r\n  register(formData: any): Observable<MockUser> {\r\n    // Demo: accept any registration and \"log the user in\"\r\n    const newUser: MockUser = {\r\n      id: String(Math.random()),\r\n      email: formData.email,\r\n      firstName: formData.firstName,\r\n      lastName: formData.lastName,\r\n      token: 'mock-jwt-token'\r\n    };\r\n    this.setSession(newUser);\r\n    return of(newUser).pipe(delay(700));\r\n  }\r\n\r\n\r\n\r\n  /** Log out the user */\r\n  logout() {\r\n    this.clearSession();\r\n    this.userSubject.next(null);\r\n  }\r\n\r\n\r\n  /** Get currently logged in user */\r\n  getCurrentUser(): MockUser | null {\r\n    return this.userSubject.value;\r\n  }\r\n\r\n\r\n\r\n  /** Whether user is logged in */\r\n  isLoggedIn(): boolean {\r\n    return !!this.getCurrentUser();\r\n  }\r\n\r\n\r\n\r\n  // Session helpers (localStorage + cookie)\r\n  private setSession(user: MockUser) {\r\n    if (isPlatformBrowser(this.platformId)) {\r\n      localStorage.setItem('currentUser', JSON.stringify(user));\r\n\r\n      // Set cookie (expires in 7 days)\r\n      const d = new Date();\r\n      d.setTime(d.getTime() + 7 * 24 * 60 * 60 * 1000);\r\n      document.cookie = `token=${user.token};expires=${d.toUTCString()};path=/`;\r\n    }\r\n    this.userSubject.next(user);\r\n  }\r\n\r\n\r\n  /** Get user from localStorage */\r\n  private getUserFromStorage(): MockUser | null {\r\n    if (isPlatformBrowser(this.platformId)) {\r\n      const json = localStorage.getItem('currentUser');\r\n      if (json) {\r\n        try {\r\n          return JSON.parse(json) as MockUser;\r\n        } catch {\r\n          return null;\r\n        }\r\n      }\r\n    }\r\n    return null;\r\n  }\r\n\r\n  private clearSession() {\r\n    if (isPlatformBrowser(this.platformId)) {\r\n      localStorage.removeItem('currentUser');\r\n      this.clearCookie('token');\r\n    }\r\n  }\r\n\r\n  private clearCookie(name: string) {\r\n    if (isPlatformBrowser(this.platformId)) { // Only available in the browser\r\n      document.cookie = name + '=; Max-Age=0; path=/;';\r\n    }\r\n  }\r\n}\r\n",
+            "constructorObj": {
+                "name": "constructor",
+                "description": "",
+                "deprecated": false,
+                "deprecationMessage": "",
+                "args": [
+                    {
+                        "name": "platformId",
+                        "type": "Object",
+                        "deprecated": false,
+                        "deprecationMessage": ""
+                    },
+                    {
+                        "name": "http",
+                        "type": "HttpClient",
+                        "deprecated": false,
+                        "deprecationMessage": ""
+                    }
+                ],
+                "line": 25,
+                "jsdoctags": [
+                    {
+                        "name": "platformId",
+                        "type": "Object",
+                        "deprecated": false,
+                        "deprecationMessage": "",
+                        "tagName": {
+                            "text": "param"
+                        }
+                    },
+                    {
+                        "name": "http",
+                        "type": "HttpClient",
+                        "deprecated": false,
+                        "deprecationMessage": "",
+                        "tagName": {
+                            "text": "param"
+                        }
+                    }
+                ]
+            },
+            "extends": [],
+            "type": "injectable"
+        }
+    ],
+    "guards": [],
+    "interceptors": [],
+    "classes": [],
+    "directives": [],
+    "components": [
+        {
+            "name": "App",
+            "id": "component-App-5c52f1a8529821e81b4508debb5b4514bdff79adcb8078380f618d8668669d839ad0cf36e57add7a9191afd01cce2a327e59043d30720fd8ab04cf7c059032ac",
+            "file": "src/app/app.ts",
+            "encapsulation": [],
+            "entryComponents": [],
+            "inputs": [],
+            "outputs": [],
+            "providers": [],
+            "selector": "app-root",
+            "styleUrls": [],
+            "styles": [],
+            "templateUrl": [
+                "./app.html"
+            ],
+            "viewProviders": [],
+            "hostDirectives": [],
+            "inputsClass": [],
+            "outputsClass": [],
+            "propertiesClass": [],
+            "methodsClass": [],
+            "deprecated": false,
+            "deprecationMessage": "",
+            "hostBindings": [],
+            "hostListeners": [],
+            "standalone": false,
+            "imports": [
+                {
+                    "name": "RouterOutlet"
+                },
+                {
+                    "name": "CommonModule",
+                    "type": "module"
+                },
+                {
+                    "name": "Sidenav"
+                },
+                {
+                    "name": "RouterModule",
+                    "type": "module"
+                }
+            ],
+            "description": "",
+            "rawdescription": "\n",
+            "type": "component",
+            "sourceCode": "import { Component, signal } from '@angular/core';\r\nimport { RouterModule, RouterOutlet } from '@angular/router';\r\nimport { Router, NavigationEnd } from '@angular/router';\r\nimport { filter } from 'rxjs/operators';\r\nimport { CommonModule } from '@angular/common';\r\nimport { Sidenav } from './shared/components/sidenav/sidenav';\r\n\r\n@Component({\r\n  selector: 'app-root',\r\n  imports: [RouterOutlet, CommonModule,Sidenav,RouterModule],\r\n  templateUrl: './app.html',\r\n  styleUrl: './app.css'\r\n})\r\nexport class App {\r\n\r\n    constructor(private router: Router) {}\r\n\r\n  // check if current url starts with /auth\r\n  get isAuthRoute(): boolean {\r\n    return this.router.url.startsWith('/auth');\r\n  }\r\n  \r\n}\r\n\r\n",
+            "styleUrl": "./app.css",
+            "assetsDirs": [],
+            "styleUrlsData": "",
+            "stylesData": "",
+            "constructorObj": {
+                "name": "constructor",
+                "description": "",
+                "deprecated": false,
+                "deprecationMessage": "",
+                "args": [
+                    {
+                        "name": "router",
+                        "type": "Router",
+                        "deprecated": false,
+                        "deprecationMessage": ""
+                    }
+                ],
+                "line": 14,
+                "jsdoctags": [
+                    {
+                        "name": "router",
+                        "type": "Router",
+                        "deprecated": false,
+                        "deprecationMessage": "",
+                        "tagName": {
+                            "text": "param"
+                        }
+                    }
+                ]
+            },
+            "extends": [],
+            "accessors": {
+                "isAuthRoute": {
+                    "name": "isAuthRoute",
+                    "getSignature": {
+                        "name": "isAuthRoute",
+                        "type": "boolean",
+                        "returnType": "boolean",
+                        "line": 19
+                    }
+                }
+            },
+            "templateData": "<!-- Show sidenav everywhere except /auth -->\r\n<app-sidenav *ngIf=\"!isAuthRoute\"></app-sidenav>\r\n\r\n<!-- For /auth routes (login/register) just show the router-outlet -->\r\n<router-outlet *ngIf=\"isAuthRoute\"></router-outlet>\r\n"
+        },
+        {
+            "name": "AuthDashboard",
+            "id": "component-AuthDashboard-cda7f1ed682c0c81ef615a2a40fbedfbb84aa6e72d12c2f10c22e1faafa965db08d64766c72ca91de6510ddcb43628583413fcdacfcf4afc0a2bac27eb638675",
+            "file": "src/app/components/auth/auth-dashboard/auth-dashboard.ts",
+            "encapsulation": [],
+            "entryComponents": [],
+            "inputs": [],
+            "outputs": [],
+            "providers": [],
+            "selector": "app-auth-dashboard",
+            "styleUrls": [],
+            "styles": [],
+            "templateUrl": [
+                "./auth-dashboard.html"
+            ],
+            "viewProviders": [],
+            "hostDirectives": [],
+            "inputsClass": [],
+            "outputsClass": [],
+            "propertiesClass": [],
+            "methodsClass": [
+                {
+                    "name": "logout",
+                    "args": [],
+                    "optional": false,
+                    "returnType": "void",
+                    "typeParameters": [],
+                    "line": 14,
+                    "deprecated": false,
+                    "deprecationMessage": ""
+                }
+            ],
+            "deprecated": false,
+            "deprecationMessage": "",
+            "hostBindings": [],
+            "hostListeners": [],
+            "standalone": false,
+            "imports": [
+                {
+                    "name": "NzButtonModule",
+                    "type": "module"
+                }
+            ],
+            "description": "",
+            "rawdescription": "\n",
+            "type": "component",
+            "sourceCode": "import { Component } from '@angular/core';\r\nimport { NzButtonModule } from 'ng-zorro-antd/button';\r\nimport { Router } from '@angular/router';\r\nimport { Auth } from '../../../services/auth/auth';\r\n\r\n@Component({\r\n  selector: 'app-auth-dashboard',\r\n  imports: [NzButtonModule],\r\n  templateUrl: './auth-dashboard.html',\r\n  styleUrl: './auth-dashboard.css',\r\n})\r\nexport class AuthDashboard {\r\n  constructor(private auth: Auth, private router: Router) {}\r\n  logout() {\r\n    this.auth.logout();\r\n    this.router.navigateByUrl('/auth');\r\n  }\r\n}\r\n// This component serves as a simple dashboard for authenticated users, allowing them to log out.\r\n",
+            "styleUrl": "./auth-dashboard.css",
+            "assetsDirs": [],
+            "styleUrlsData": "",
+            "stylesData": "",
+            "constructorObj": {
+                "name": "constructor",
+                "description": "",
+                "deprecated": false,
+                "deprecationMessage": "",
+                "args": [
+                    {
+                        "name": "auth",
+                        "type": "Auth",
+                        "deprecated": false,
+                        "deprecationMessage": ""
+                    },
+                    {
+                        "name": "router",
+                        "type": "Router",
+                        "deprecated": false,
+                        "deprecationMessage": ""
+                    }
+                ],
+                "line": 12,
+                "jsdoctags": [
+                    {
+                        "name": "auth",
+                        "type": "Auth",
+                        "deprecated": false,
+                        "deprecationMessage": "",
+                        "tagName": {
+                            "text": "param"
+                        }
+                    },
+                    {
+                        "name": "router",
+                        "type": "Router",
+                        "deprecated": false,
+                        "deprecationMessage": "",
+                        "tagName": {
+                            "text": "param"
+                        }
+                    }
+                ]
+            },
+            "extends": [],
+            "templateData": "<div class=\"min-h-screen grid place-items-center\">\r\n  <div class=\"text-center space-y-4\">\r\n    <h1 class=\"text-2xl font-semibold\">Dashboard</h1>\r\n    <button nz-button nzType=\"default\" (click)=\"logout()\">Logout</button>\r\n  </div>\r\n</div>\r\n"
+        },
+        {
+            "name": "AuthShell",
+            "id": "component-AuthShell-5a63ba65d259ee4592d1e64494323c51a105be10b2f10b292f0620b989bb9fe9d97741603246d96a21838880248b725d09ee636a41485d1e067d3a63df13e7af",
+            "file": "src/app/components/auth/auth-shell/auth-shell.ts",
+            "encapsulation": [],
+            "entryComponents": [],
+            "inputs": [],
+            "outputs": [],
+            "providers": [],
+            "selector": "app-auth-shell",
+            "styleUrls": [],
+            "styles": [],
+            "templateUrl": [
+                "./auth-shell.html"
+            ],
+            "viewProviders": [],
+            "hostDirectives": [],
+            "inputsClass": [],
+            "outputsClass": [],
+            "propertiesClass": [
+                {
+                    "name": "tabIndex",
+                    "defaultValue": "signal(0)",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "",
+                    "indexKey": "",
+                    "optional": false,
+                    "description": "",
+                    "line": 13
+                }
+            ],
+            "methodsClass": [],
+            "deprecated": false,
+            "deprecationMessage": "",
+            "hostBindings": [],
+            "hostListeners": [],
+            "standalone": false,
+            "imports": [
+                {
+                    "name": "NzTabsModule",
+                    "type": "module"
+                },
+                {
+                    "name": "Login"
+                },
+                {
+                    "name": "Register"
+                }
+            ],
+            "description": "",
+            "rawdescription": "\n",
+            "type": "component",
+            "sourceCode": "import { Component, signal } from '@angular/core';\r\nimport { NzTabsModule } from 'ng-zorro-antd/tabs';\r\nimport { Login } from '../login/login';\r\nimport { Register } from '../register/register';\r\n\r\n@Component({\r\n  selector: 'app-auth-shell',\r\n  imports: [NzTabsModule, Login, Register],\r\n  templateUrl: './auth-shell.html',\r\n  styleUrl: './auth-shell.css'\r\n})\r\nexport class AuthShell {\r\n  tabIndex = signal(0);\r\n}\r\n\r\n\r\n\r\n",
+            "styleUrl": "./auth-shell.css",
+            "assetsDirs": [],
+            "styleUrlsData": "",
+            "stylesData": "",
+            "extends": [],
+            "templateData": "<div class=\"min-h-screen bg-gray-50 flex justify-center items-start pt-10\">\r\n  <div class=\"w-full max-w-xl\">\r\n    <div class=\"bg-white shadow rounded-xl p-6\">\r\n      <nz-tabs\r\n        class=\"auth-tabs !w-full\"\r\n        [(nzSelectedIndex)]=\"tabIndex\"\r\n        [nzTabBarGutter]=\"0\"\r\n      >\r\n        <nz-tab nzTitle=\"Register\">\r\n          <app-register (switchToLogin)=\"tabIndex.set(1)\"></app-register>\r\n        </nz-tab>\r\n        <nz-tab nzTitle=\"Login\">\r\n          <app-login (switchToRegister)=\"tabIndex.set(0)\"></app-login>\r\n        </nz-tab>\r\n      </nz-tabs>\r\n    </div>\r\n  </div>\r\n</div>\r\n\r\n"
+        },
+        {
+            "name": "EmailPending",
+            "id": "component-EmailPending-f3572e3bada514fb4d347166b55dfa36f64756d3c97fa95bf36f0ab924d5857fba517a7be0b7e414fa0a278f9fef445853a6f4fceb5c9124fa5dba956254a290",
+            "file": "src/app/shared/components/results/email-pending/email-pending.ts",
+            "encapsulation": [],
+            "entryComponents": [],
+            "inputs": [],
+            "outputs": [],
+            "providers": [],
+            "selector": "app-email-pending",
+            "styleUrls": [],
+            "styles": [],
+            "templateUrl": [
+                "./email-pending.html"
+            ],
+            "viewProviders": [],
+            "hostDirectives": [],
+            "inputsClass": [],
+            "outputsClass": [],
+            "propertiesClass": [],
+            "methodsClass": [
+                {
+                    "name": "resendActivationLink",
+                    "args": [],
+                    "optional": false,
+                    "returnType": "void",
+                    "typeParameters": [],
+                    "line": 21,
+                    "deprecated": false,
+                    "deprecationMessage": ""
+                }
+            ],
+            "deprecated": false,
+            "deprecationMessage": "",
+            "hostBindings": [],
+            "hostListeners": [],
+            "standalone": false,
+            "imports": [
+                {
+                    "name": "NzButtonModule",
+                    "type": "module"
+                },
+                {
+                    "name": "NzResultModule",
+                    "type": "module"
+                },
+                {
+                    "name": "NzResultModule",
+                    "type": "module"
+                }
+            ],
+            "description": "",
+            "rawdescription": "\n",
+            "type": "component",
+            "sourceCode": "import { Component } from '@angular/core';\r\n\r\nimport { NzButtonModule } from 'ng-zorro-antd/button';\r\nimport { NzResultModule } from 'ng-zorro-antd/result';\r\nimport { NzIconService } from 'ng-zorro-antd/icon';\r\nimport { icons } from '../../sidenav/icons-provider';\r\nimport { Router } from '@angular/router';\r\nimport { NzNotificationService } from 'ng-zorro-antd/notification';\r\n\r\n@Component({\r\n  selector: 'app-email-pending',\r\n  imports: [NzButtonModule, NzResultModule,NzResultModule],\r\n  templateUrl: './email-pending.html',\r\n  styleUrl: './email-pending.css'\r\n})\r\nexport class EmailPending {\r\n  constructor(private iconService: NzIconService, private router: Router, private notify: NzNotificationService) {\r\n    this.iconService.addIcon(...icons);\r\n  }\r\n\r\n  resendActivationLink() {\r\n    // Logic to resend the activation link\r\n     setTimeout(() => {\r\n          this.notify.success('Success', 'Activation link resent');\r\n          this.router.navigateByUrl('/auth');\r\n        }, 1500);\r\n\r\n  }\r\n\r\n}\r\n",
+            "styleUrl": "./email-pending.css",
+            "assetsDirs": [],
+            "styleUrlsData": "",
+            "stylesData": "",
+            "constructorObj": {
+                "name": "constructor",
+                "description": "",
+                "deprecated": false,
+                "deprecationMessage": "",
+                "args": [
+                    {
+                        "name": "iconService",
+                        "type": "NzIconService",
+                        "deprecated": false,
+                        "deprecationMessage": ""
+                    },
+                    {
+                        "name": "router",
+                        "type": "Router",
+                        "deprecated": false,
+                        "deprecationMessage": ""
+                    },
+                    {
+                        "name": "notify",
+                        "type": "NzNotificationService",
+                        "deprecated": false,
+                        "deprecationMessage": ""
+                    }
+                ],
+                "line": 16,
+                "jsdoctags": [
+                    {
+                        "name": "iconService",
+                        "type": "NzIconService",
+                        "deprecated": false,
+                        "deprecationMessage": "",
+                        "tagName": {
+                            "text": "param"
+                        }
+                    },
+                    {
+                        "name": "router",
+                        "type": "Router",
+                        "deprecated": false,
+                        "deprecationMessage": "",
+                        "tagName": {
+                            "text": "param"
+                        }
+                    },
+                    {
+                        "name": "notify",
+                        "type": "NzNotificationService",
+                        "deprecated": false,
+                        "deprecationMessage": "",
+                        "tagName": {
+                            "text": "param"
+                        }
+                    }
+                ]
+            },
+            "extends": [],
+            "templateData": "<div class=\"flex flex-col items-center\">\r\n  <nz-result\r\n    nzStatus=\"success\"\r\n    nzTitle=\"Your account is pending\"\r\n    nzSubTitle=\"A activation  sent to your email id, Please verify your email\"\r\n  >\r\n    <div nz-result-extra class=\"flex flex-row items-center gap-2\">\r\n      <span\r\n       class=\"pt-2\"\r\n        ><p class=\"text-sm text-[#000000]\">\r\n          If you can't find activation link click here\r\n        </p></span\r\n      >\r\n      <button nz-button nzType=\"primary\" (click)=\"resendActivationLink()\">Resend activation link</button>\r\n    </div>\r\n  </nz-result>\r\n</div>\r\n"
+        },
+        {
+            "name": "InputDialog",
+            "id": "component-InputDialog-9ce17880a9b1808d5eb5715dbf6bb0c66fa2efa8636b696f9bce2b676183150d4a67775af5cf5da489fe75a1ee04656813f2973ad69b86d8870c1bee85b8d9cc",
+            "file": "src/app/shared/components/modal/dialog/input-dialog/input-dialog.ts",
+            "encapsulation": [],
+            "entryComponents": [],
+            "inputs": [],
+            "outputs": [],
+            "providers": [],
+            "selector": "app-input-dialog",
+            "styleUrls": [],
+            "styles": [],
+            "templateUrl": [
+                "./input-dialog.html"
+            ],
+            "viewProviders": [],
+            "hostDirectives": [],
+            "inputsClass": [
+                {
+                    "name": "cancelText",
+                    "defaultValue": "'No'",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "line": 33,
+                    "type": "string",
+                    "decorators": []
+                },
+                {
+                    "name": "content",
+                    "defaultValue": "'Please confirm your action.'",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "line": 31,
+                    "type": "string",
+                    "decorators": []
+                },
+                {
+                    "name": "okText",
+                    "defaultValue": "'Yes'",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "line": 32,
+                    "type": "string",
+                    "decorators": []
+                },
+                {
+                    "name": "title",
+                    "defaultValue": "'Are you sure?'",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "line": 30,
+                    "type": "string",
+                    "decorators": []
+                }
+            ],
+            "outputsClass": [
+                {
+                    "name": "confirmed",
+                    "defaultValue": "new EventEmitter<string | undefined>()",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "line": 34,
+                    "type": "EventEmitter"
+                }
+            ],
+            "propertiesClass": [
+                {
+                    "name": "emailForm",
+                    "defaultValue": "new FormGroup({\r\n    email: new FormControl('', [Validators.required, Validators.email]),\r\n  })",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "",
+                    "indexKey": "",
+                    "optional": false,
+                    "description": "",
+                    "line": 38
+                },
+                {
+                    "name": "isVisible",
+                    "defaultValue": "false",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "",
+                    "indexKey": "",
+                    "optional": false,
+                    "description": "",
+                    "line": 42
+                },
+                {
+                    "name": "submitted",
+                    "defaultValue": "false",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "",
+                    "indexKey": "",
+                    "optional": false,
+                    "description": "",
+                    "line": 36
+                }
+            ],
+            "methodsClass": [
+                {
+                    "name": "getEmailErrorTip",
+                    "args": [],
+                    "optional": false,
+                    "returnType": "string",
+                    "typeParameters": [],
+                    "line": 62,
+                    "deprecated": false,
+                    "deprecationMessage": ""
+                },
+                {
+                    "name": "handleCancel",
+                    "args": [],
+                    "optional": false,
+                    "returnType": "void",
+                    "typeParameters": [],
+                    "line": 57,
+                    "deprecated": false,
+                    "deprecationMessage": ""
+                },
+                {
+                    "name": "handleOk",
+                    "args": [],
+                    "optional": false,
+                    "returnType": "void",
+                    "typeParameters": [],
+                    "line": 48,
+                    "deprecated": false,
+                    "deprecationMessage": ""
+                },
+                {
+                    "name": "showModal",
+                    "args": [],
+                    "optional": false,
+                    "returnType": "void",
+                    "typeParameters": [],
+                    "line": 44,
+                    "deprecated": false,
+                    "deprecationMessage": ""
+                }
+            ],
+            "deprecated": false,
+            "deprecationMessage": "",
+            "hostBindings": [],
+            "hostListeners": [],
+            "standalone": false,
+            "imports": [
+                {
+                    "name": "NzButtonModule",
+                    "type": "module"
+                },
+                {
+                    "name": "NzModalModule",
+                    "type": "module"
+                },
+                {
+                    "name": "FormsModule",
+                    "type": "module"
+                },
+                {
+                    "name": "NzInputModule",
+                    "type": "module"
+                },
+                {
+                    "name": "NzIconModule",
+                    "type": "module"
+                },
+                {
+                    "name": "FormsModule",
+                    "type": "module"
+                },
+                {
+                    "name": "ReactiveFormsModule",
+                    "type": "module"
+                },
+                {
+                    "name": "CommonModule",
+                    "type": "module"
+                }
+            ],
+            "description": "",
+            "rawdescription": "\n",
+            "type": "component",
+            "sourceCode": "import { Component, EventEmitter, Input, Output } from '@angular/core';\r\nimport { NzButtonModule } from 'ng-zorro-antd/button';\r\nimport { NzModalModule } from 'ng-zorro-antd/modal';\r\nimport { FormsModule, ReactiveFormsModule } from '@angular/forms';\r\nimport { NzInputModule } from 'ng-zorro-antd/input';\r\nimport { NzIconService } from 'ng-zorro-antd/icon';\r\nimport { icons } from '../../../sidenav/icons-provider';\r\nimport { NzIconModule } from 'ng-zorro-antd/icon';\r\nimport { FormGroup, FormControl, Validators } from '@angular/forms';\r\nimport { CommonModule } from '@angular/common';\r\n\r\n@Component({\r\n  selector: 'app-input-dialog',\r\n  imports: [  NzButtonModule,\r\n    NzModalModule,\r\n    FormsModule,\r\n    NzInputModule,\r\n    NzIconModule,\r\n    FormsModule,\r\n    ReactiveFormsModule,\r\n    CommonModule\r\n  ],\r\n  templateUrl: './input-dialog.html',\r\n  styleUrl: './input-dialog.css'\r\n})\r\nexport class InputDialog {\r\n  constructor(private iconService: NzIconService) {\r\n    this.iconService.addIcon(...icons);\r\n  }\r\n @Input() title: string = 'Are you sure?';\r\n  @Input() content: string = 'Please confirm your action.';\r\n  @Input() okText: string = 'Yes';\r\n  @Input() cancelText: string = 'No';\r\n  @Output() confirmed = new EventEmitter<string | undefined>();\r\n\r\n  submitted = false;\r\n\r\n  emailForm = new FormGroup({\r\n    email: new FormControl('', [Validators.required, Validators.email]),\r\n  });\r\n\r\n  isVisible = false;\r\n\r\n  showModal(): void {\r\n    this.isVisible = true;\r\n  }\r\n\r\n  handleOk(): void {\r\n    this.submitted = true;\r\n    if (this.emailForm.valid) {\r\n      console.log('Button ok clicked!');\r\n      this.isVisible = false;\r\n      this.confirmed.emit(this.emailForm.get('email')?.value ?? undefined);\r\n    }\r\n  }\r\n\r\n  handleCancel(): void {\r\n    console.log('Button cancel clicked!');\r\n    this.isVisible = false;\r\n  }\r\n\r\n  getEmailErrorTip(): string {\r\n    const emailControl = this.emailForm.get('email');\r\n    if (this.submitted && emailControl?.hasError('required')) {\r\n      return 'Please enter an email address';\r\n    } else if (this.submitted && emailControl?.hasError('email')) {\r\n      return 'Invalid email format';\r\n    }\r\n    return '';\r\n  }\r\n\r\n}\r\n",
+            "styleUrl": "./input-dialog.css",
+            "assetsDirs": [],
+            "styleUrlsData": "",
+            "stylesData": "",
+            "constructorObj": {
+                "name": "constructor",
+                "description": "",
+                "deprecated": false,
+                "deprecationMessage": "",
+                "args": [
+                    {
+                        "name": "iconService",
+                        "type": "NzIconService",
+                        "deprecated": false,
+                        "deprecationMessage": ""
+                    }
+                ],
+                "line": 26,
+                "jsdoctags": [
+                    {
+                        "name": "iconService",
+                        "type": "NzIconService",
+                        "deprecated": false,
+                        "deprecationMessage": "",
+                        "tagName": {
+                            "text": "param"
+                        }
+                    }
+                ]
+            },
+            "extends": [],
+            "templateData": "<nz-modal\r\n  [(nzVisible)]=\"isVisible\"\r\n  [nzTitle]=\"title\"\r\n  [nzOkText]=\"okText\"\r\n  [nzCancelText]=\"cancelText\"\r\n  (nzOnCancel)=\"handleCancel()\"\r\n  (nzOnOk)=\"handleOk()\"\r\n>\r\n  <ng-container *nzModalContent>\r\n    <p>{{ content }}</p>\r\n    <form [formGroup]=\"emailForm\">\r\n      <input nz-input placeholder=\"Basic usage\" formControlName=\"email\" />\r\n\r\n      @if (submitted && emailForm.get('email')?.invalid) {\r\n        <div class=\"text-red-600 mt-1 text-sm\">\r\n          {{ getEmailErrorTip() }}\r\n        </div>\r\n      }\r\n    </form>\r\n  </ng-container>\r\n</nz-modal>\r\n<!--\r\n  Note: The above code defines a modal dialog component using Angular and NG-ZORRO.\r\n  It includes a form with email input and validation error display.\r\n-->"
+        },
+        {
+            "name": "Loader",
+            "id": "component-Loader-aeb7879b021569bc0d5c3efababb69ddd1cffbfb0fe62cf26221b3659e31ff11de997253442af90366d7e3fef0f64a7354b1eaf78f091eb54f728db51001a3ae",
+            "file": "src/app/shared/components/modal/loader/loader.ts",
+            "encapsulation": [],
+            "entryComponents": [],
+            "inputs": [],
+            "outputs": [],
+            "providers": [],
+            "selector": "app-loader",
+            "styleUrls": [],
+            "styles": [],
+            "templateUrl": [
+                "./loader.html"
+            ],
+            "viewProviders": [],
+            "hostDirectives": [],
+            "inputsClass": [],
+            "outputsClass": [],
+            "propertiesClass": [],
+            "methodsClass": [],
+            "deprecated": false,
+            "deprecationMessage": "",
+            "hostBindings": [],
+            "hostListeners": [],
+            "standalone": false,
+            "imports": [
+                {
+                    "name": "NzSpinModule",
+                    "type": "module"
+                },
+                {
+                    "name": "CommonModule",
+                    "type": "module"
+                }
+            ],
+            "description": "",
+            "rawdescription": "\n",
+            "type": "component",
+            "sourceCode": "import { Component, Input } from '@angular/core';\r\nimport { CommonModule } from '@angular/common';\r\nimport { NzSpinModule } from 'ng-zorro-antd/spin';\r\n\r\n\r\n@Component({\r\n  selector: 'app-loader',\r\n  imports: [NzSpinModule,CommonModule],\r\n  templateUrl: './loader.html',\r\n  styleUrl: './loader.css'\r\n})\r\nexport class Loader {\r\n}\r\n",
+            "styleUrl": "./loader.css",
+            "assetsDirs": [],
+            "styleUrlsData": "",
+            "stylesData": "",
+            "extends": [],
+            "templateData": "<div class=\"fixed inset-0 z-50 grid place-items-center bg-black/30\">\r\n  <nz-spin nzSize=\"large\" nzSimple></nz-spin>\r\n</div>\r\n"
+        },
+        {
+            "name": "Login",
+            "id": "component-Login-36a72e012c7543c30ee128ab3de6adf418fe9bfda13a35e6f3e7d058f35ccf8813172f5c91da4cadcb58bcfe3f9bd5f69002b5c7bf74144cdaee4085d190289c",
+            "file": "src/app/components/auth/login/login.ts",
+            "encapsulation": [],
+            "entryComponents": [],
+            "inputs": [],
+            "outputs": [],
+            "providers": [],
+            "selector": "app-login",
+            "styleUrls": [],
+            "styles": [],
+            "templateUrl": [
+                "./login.html"
+            ],
+            "viewProviders": [],
+            "hostDirectives": [],
+            "inputsClass": [],
+            "outputsClass": [
+                {
+                    "name": "switchToRegister",
+                    "defaultValue": "new EventEmitter<void>()",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "line": 49,
+                    "type": "EventEmitter"
+                }
+            ],
+            "propertiesClass": [
+                {
+                    "name": "eamilComp",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "InputDialog",
+                    "indexKey": "",
+                    "optional": false,
+                    "description": "",
+                    "line": 48,
+                    "decorators": [
+                        {
+                            "name": "ViewChild",
+                            "stringifiedArguments": "InputDialog"
+                        }
+                    ],
+                    "modifierKind": [
+                        170
+                    ]
+                },
+                {
+                    "name": "form",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "FormGroup",
+                    "indexKey": "",
+                    "optional": false,
+                    "description": "",
+                    "line": 50
+                },
+                {
+                    "name": "loading",
+                    "defaultValue": "signal(false)",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "",
+                    "indexKey": "",
+                    "optional": false,
+                    "description": "",
+                    "line": 52
+                },
+                {
+                    "name": "passwordVisible",
+                    "defaultValue": "signal(false)",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "",
+                    "indexKey": "",
+                    "optional": false,
+                    "description": "",
+                    "line": 54
+                },
+                {
+                    "name": "submitted",
+                    "defaultValue": "signal(false)",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "",
+                    "indexKey": "",
+                    "optional": false,
+                    "description": "",
+                    "line": 53
+                }
+            ],
+            "methodsClass": [
+                {
+                    "name": "handelOnEmail",
+                    "args": [
+                        {
+                            "name": "otp",
+                            "type": "string | undefined",
+                            "deprecated": false,
+                            "deprecationMessage": ""
+                        }
+                    ],
+                    "optional": false,
+                    "returnType": "void",
+                    "typeParameters": [],
+                    "line": 96,
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "jsdoctags": [
+                        {
+                            "name": "otp",
+                            "type": "string | undefined",
+                            "deprecated": false,
+                            "deprecationMessage": "",
+                            "tagName": {
+                                "text": "param"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "onSubmit",
+                    "args": [],
+                    "optional": false,
+                    "returnType": "void",
+                    "typeParameters": [],
+                    "line": 75,
+                    "deprecated": false,
+                    "deprecationMessage": ""
+                },
+                {
+                    "name": "openEmailConfirm",
+                    "args": [],
+                    "optional": false,
+                    "returnType": "void",
+                    "typeParameters": [],
+                    "line": 107,
+                    "deprecated": false,
+                    "deprecationMessage": ""
+                },
+                {
+                    "name": "togglePassword",
+                    "args": [],
+                    "optional": false,
+                    "returnType": "void",
+                    "typeParameters": [],
+                    "line": 71,
+                    "deprecated": false,
+                    "deprecationMessage": ""
+                }
+            ],
+            "deprecated": false,
+            "deprecationMessage": "",
+            "hostBindings": [],
+            "hostListeners": [],
+            "standalone": false,
+            "imports": [
+                {
+                    "name": "ReactiveFormsModule",
+                    "type": "module"
+                },
+                {
+                    "name": "NzInputModule",
+                    "type": "module"
+                },
+                {
+                    "name": "FormsModule",
+                    "type": "module"
+                },
+                {
+                    "name": "NzButtonModule",
+                    "type": "module"
+                },
+                {
+                    "name": "NzCheckboxModule",
+                    "type": "module"
+                },
+                {
+                    "name": "NzTypographyModule",
+                    "type": "module"
+                },
+                {
+                    "name": "NzIconModule",
+                    "type": "module"
+                },
+                {
+                    "name": "NzFormModule",
+                    "type": "module"
+                },
+                {
+                    "name": "Loader"
+                },
+                {
+                    "name": "InputDialog"
+                }
+            ],
+            "description": "",
+            "rawdescription": "\n",
+            "type": "component",
+            "sourceCode": "import {\r\n  Component,\r\n  EventEmitter,\r\n  Output,\r\n  signal,\r\n  ViewChild,\r\n} from '@angular/core';\r\nimport {\r\n  ReactiveFormsModule,\r\n  FormBuilder,\r\n  Validators,\r\n  FormsModule,\r\n  FormGroup,\r\n} from '@angular/forms';\r\nimport { NzFormModule } from 'ng-zorro-antd/form';\r\nimport { NzInputModule } from 'ng-zorro-antd/input';\r\nimport { NzCheckboxModule } from 'ng-zorro-antd/checkbox';\r\nimport { NzButtonModule } from 'ng-zorro-antd/button';\r\nimport { NzNotificationService } from 'ng-zorro-antd/notification';\r\nimport { Router } from '@angular/router';\r\nimport { NzTypographyModule } from 'ng-zorro-antd/typography';\r\n\r\n/* AuthService auth/auth.service.ts */\r\nimport { Auth } from '../../../services/auth/auth';\r\nimport { NzIconModule, NzIconService } from 'ng-zorro-antd/icon';\r\nimport { icons } from '../../../shared/components/sidenav/icons-provider';\r\nimport { Loader } from '../../../shared/components/modal/loader/loader';\r\nimport { InputDialog } from '../../../shared/components/modal/dialog/input-dialog/input-dialog';\r\n\r\n@Component({\r\n  selector: 'app-login',\r\n  imports: [\r\n    ReactiveFormsModule,\r\n    NzInputModule,\r\n    FormsModule,\r\n    NzButtonModule,\r\n    NzCheckboxModule,\r\n    NzTypographyModule,\r\n    NzIconModule,\r\n    NzFormModule,\r\n    Loader,\r\n    InputDialog,\r\n  ],\r\n  templateUrl: './login.html',\r\n  styleUrl: './login.css',\r\n})\r\nexport class Login {\r\n  @ViewChild(InputDialog) eamilComp!: InputDialog;\r\n  @Output() switchToRegister = new EventEmitter<void>();\r\n  form: FormGroup;\r\n\r\n  loading = signal(false);\r\n  submitted = signal(false);\r\n  passwordVisible = signal(false);\r\n\r\n  constructor(\r\n    private fb: FormBuilder,\r\n    private auth: Auth,\r\n    private router: Router,\r\n    private notify: NzNotificationService,\r\n    private iconService: NzIconService\r\n  ) {\r\n    this.form = this.fb.group({\r\n      email: ['', [Validators.required, Validators.email]],\r\n      password: ['', [Validators.required, Validators.minLength(6)]],\r\n      agree: [true, Validators.requiredTrue],\r\n    });\r\n\r\n    this.iconService.addIcon(...icons);\r\n  }\r\n  togglePassword() {\r\n    this.passwordVisible.update((v) => !v);\r\n  }\r\n\r\n  onSubmit() {\r\n    // onsummit forms summit\r\n    this.submitted.set(true);\r\n    if (this.form.invalid) return;\r\n    const { email, password } = this.form.value;\r\n    this.loading.set(true);\r\n    this.auth.login(email!, password!).subscribe({\r\n      next: () => {\r\n        setTimeout(() => {\r\n          this.loading.set(false);\r\n          this.notify.success('Welcome', 'Logged in successfully');\r\n          this.router.navigateByUrl('/dashboard');\r\n        }, 1500);\r\n      },\r\n      error: (err) => {\r\n        this.loading.set(false);\r\n        this.notify.error('Login failed', err.message || 'Invalid credentials');\r\n      },\r\n    });\r\n  }\r\n\r\n  handelOnEmail(otp: string | undefined) {\r\n    console.log('Email received from child:', otp);\r\n    // do something with the value\r\n    setTimeout(() => {\r\n      this.notify.success(\r\n        'Sent',\r\n        'Password reset link sent to your registered email id successfully'\r\n      );\r\n    }, 1500);\r\n  }\r\n\r\n  openEmailConfirm() {\r\n    this.eamilComp.showModal();\r\n  }\r\n}\r\n",
+            "styleUrl": "./login.css",
+            "assetsDirs": [],
+            "styleUrlsData": "",
+            "stylesData": "",
+            "constructorObj": {
+                "name": "constructor",
+                "description": "",
+                "deprecated": false,
+                "deprecationMessage": "",
+                "args": [
+                    {
+                        "name": "fb",
+                        "type": "FormBuilder",
+                        "deprecated": false,
+                        "deprecationMessage": ""
+                    },
+                    {
+                        "name": "auth",
+                        "type": "Auth",
+                        "deprecated": false,
+                        "deprecationMessage": ""
+                    },
+                    {
+                        "name": "router",
+                        "type": "Router",
+                        "deprecated": false,
+                        "deprecationMessage": ""
+                    },
+                    {
+                        "name": "notify",
+                        "type": "NzNotificationService",
+                        "deprecated": false,
+                        "deprecationMessage": ""
+                    },
+                    {
+                        "name": "iconService",
+                        "type": "NzIconService",
+                        "deprecated": false,
+                        "deprecationMessage": ""
+                    }
+                ],
+                "line": 54,
+                "jsdoctags": [
+                    {
+                        "name": "fb",
+                        "type": "FormBuilder",
+                        "deprecated": false,
+                        "deprecationMessage": "",
+                        "tagName": {
+                            "text": "param"
+                        }
+                    },
+                    {
+                        "name": "auth",
+                        "type": "Auth",
+                        "deprecated": false,
+                        "deprecationMessage": "",
+                        "tagName": {
+                            "text": "param"
+                        }
+                    },
+                    {
+                        "name": "router",
+                        "type": "Router",
+                        "deprecated": false,
+                        "deprecationMessage": "",
+                        "tagName": {
+                            "text": "param"
+                        }
+                    },
+                    {
+                        "name": "notify",
+                        "type": "NzNotificationService",
+                        "deprecated": false,
+                        "deprecationMessage": "",
+                        "tagName": {
+                            "text": "param"
+                        }
+                    },
+                    {
+                        "name": "iconService",
+                        "type": "NzIconService",
+                        "deprecated": false,
+                        "deprecationMessage": "",
+                        "tagName": {
+                            "text": "param"
+                        }
+                    }
+                ]
+            },
+            "extends": [],
+            "templateData": "<!-- Loader -->\r\n@if (loading()) {\r\n  <app-loader></app-loader>\r\n}\r\n\r\n<!-- Form container  -->\r\n<form [formGroup]=\"form\" (ngSubmit)=\"onSubmit()\" nz-form class=\"space-y-4\">\r\n  <div>\r\n    <label class=\"block mb-1 text-sm font-medium\">Email</label>\r\n    <input\r\n      nz-input\r\n      placeholder=\"Enter Your Email Id\"\r\n      formControlName=\"email\"\r\n      type=\"email\"\r\n    />\r\n    @if (submitted() && form.controls['email'].invalid) {\r\n      <span class=\"text-xs text-red-500\">\r\n        Email is required\r\n      </span>\r\n    }\r\n  </div>\r\n\r\n  <div>\r\n    <label class=\"block mb-1 text-sm font-medium\">Password</label>\r\n    <nz-input-group [nzSuffix]=\"suffixIcon\">\r\n      <input\r\n        nz-input\r\n        [type]=\"passwordVisible() ? 'text' : 'password'\"\r\n        placeholder=\"Enter password\"\r\n        formControlName=\"password\"\r\n      />\r\n    </nz-input-group>\r\n\r\n    <ng-template #suffixIcon>\r\n      <span (click)=\"togglePassword()\" class=\"cursor-pointer\">\r\n        <nz-icon [nzType]=\"passwordVisible() ? 'eye-invisible' : 'eye'\"></nz-icon>\r\n      </span>\r\n    </ng-template>\r\n\r\n    @if (submitted() && form.controls['password'].invalid) {\r\n      <span class=\"text-xs text-red-500\">\r\n        Password is required\r\n      </span>\r\n    }\r\n  </div>\r\n\r\n  <div>\r\n    <label nz-checkbox formControlName=\"agree\" class=\"leading-6\">\r\n      I agree with all\r\n      <a class=\"text-blue-600 hover:underline cursor-pointer\">\r\n        Terms & Conditions\r\n      </a>\r\n      and\r\n      <a class=\"text-blue-600 hover:underline cursor-pointer\">\r\n        Privacy Policy\r\n      </a>\r\n      of Simulysis\r\n    </label>\r\n  </div>\r\n\r\n  <button\r\n    nz-button\r\n    nzType=\"primary\"\r\n    class=\"w-full\"\r\n    [disabled]=\"loading()\"\r\n    [nzLoading]=\"loading()\"\r\n  >\r\n    Login\r\n  </button>\r\n\r\n  <app-input-dialog\r\n    [title]=\"'Forget password'\"\r\n    [content]=\"'Enter Your registered Email'\"\r\n    [okText]=\"'password resent link'\"\r\n    [cancelText]=\"'Cancel'\"\r\n    (confirmed)=\"handelOnEmail($event)\"\r\n  >\r\n  </app-input-dialog>\r\n\r\n  <div class=\"text-left mt-2\">\r\n    <a data-testid=\"forgot-password-link\" class=\"text-sm text-blue-600 cursor-pointer\" (click)=\"openEmailConfirm()\">\r\n      Forget password ?\r\n    </a>\r\n  </div>\r\n</form>\r\n"
+        },
+        {
+            "name": "Organizations",
+            "id": "component-Organizations-4a1ac9cb547d93b38d96f22f633b45314b45bb734fa5f7a9ce61d941de6799cb17fb4b17839c11c079596ccc38a7d8c9544261ab41c3a194d8e888e82b7b17be",
+            "file": "src/app/components/organization/organizations/organizations.ts",
+            "encapsulation": [],
+            "entryComponents": [],
+            "inputs": [],
+            "outputs": [],
+            "providers": [],
+            "selector": "app-organizations",
+            "styleUrls": [],
+            "styles": [],
+            "templateUrl": [
+                "./organizations.html"
+            ],
+            "viewProviders": [],
+            "hostDirectives": [],
+            "inputsClass": [],
+            "outputsClass": [],
+            "propertiesClass": [],
+            "methodsClass": [],
+            "deprecated": false,
+            "deprecationMessage": "",
+            "hostBindings": [],
+            "hostListeners": [],
+            "standalone": false,
+            "imports": [],
+            "description": "",
+            "rawdescription": "\n",
+            "type": "component",
+            "sourceCode": "import { Component } from '@angular/core';\r\n\r\n@Component({\r\n  selector: 'app-organizations',\r\n  imports: [],\r\n  templateUrl: './organizations.html',\r\n  styleUrl: './organizations.css'\r\n})\r\nexport class Organizations {\r\n\r\n}\r\n",
+            "styleUrl": "./organizations.css",
+            "assetsDirs": [],
+            "styleUrlsData": "",
+            "stylesData": "",
+            "extends": [],
+            "templateData": "<p>organizations works!</p>\r\n"
+        },
+        {
+            "name": "Register",
+            "id": "component-Register-944e40fa4910eaa5fe5f303a0723a0a628196ef12be0350e87961683f22305ca5e9a638207ce0fec727d91eddbccca8d121fc4e61e90bce9bebda1361dcb3980",
+            "file": "src/app/components/auth/register/register.ts",
+            "encapsulation": [],
+            "entryComponents": [],
+            "inputs": [],
+            "outputs": [],
+            "providers": [],
+            "selector": "app-register",
+            "styleUrls": [
+                "./register.css"
+            ],
+            "styles": [],
+            "templateUrl": [
+                "./register.html"
+            ],
+            "viewProviders": [],
+            "hostDirectives": [],
+            "inputsClass": [],
+            "outputsClass": [
+                {
+                    "name": "switchToLogin",
+                    "defaultValue": "new EventEmitter<void>()",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "line": 39,
+                    "type": "EventEmitter"
+                }
+            ],
+            "propertiesClass": [
+                {
+                    "name": "form",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "FormGroup",
+                    "indexKey": "",
+                    "optional": false,
+                    "description": "",
+                    "line": 44
+                },
+                {
+                    "name": "loading",
+                    "defaultValue": "signal(false)",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "",
+                    "indexKey": "",
+                    "optional": false,
+                    "description": "",
+                    "line": 41
+                },
+                {
+                    "name": "passwordVisibleConfirm",
+                    "defaultValue": "false",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "",
+                    "indexKey": "",
+                    "optional": false,
+                    "description": "",
+                    "line": 43
+                },
+                {
+                    "name": "passwordVisibleCreate",
+                    "defaultValue": "false",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "",
+                    "indexKey": "",
+                    "optional": false,
+                    "description": "",
+                    "line": 42
+                }
+            ],
+            "methodsClass": [
+                {
+                    "name": "onSubmit",
+                    "args": [],
+                    "optional": false,
+                    "returnType": "void",
+                    "typeParameters": [],
+                    "line": 70,
+                    "deprecated": false,
+                    "deprecationMessage": ""
+                },
+                {
+                    "name": "togglePasswordConfirm",
+                    "args": [],
+                    "optional": false,
+                    "returnType": "void",
+                    "typeParameters": [],
+                    "line": 68,
+                    "deprecated": false,
+                    "deprecationMessage": ""
+                },
+                {
+                    "name": "togglePasswordCreate",
+                    "args": [],
+                    "optional": false,
+                    "returnType": "void",
+                    "typeParameters": [],
+                    "line": 67,
+                    "deprecated": false,
+                    "deprecationMessage": ""
+                }
+            ],
+            "deprecated": false,
+            "deprecationMessage": "",
+            "hostBindings": [],
+            "hostListeners": [],
+            "standalone": true,
+            "imports": [
+                {
+                    "name": "ReactiveFormsModule",
+                    "type": "module"
+                },
+                {
+                    "name": "FormsModule",
+                    "type": "module"
+                },
+                {
+                    "name": "CommonModule",
+                    "type": "module"
+                },
+                {
+                    "name": "NzFormModule",
+                    "type": "module"
+                },
+                {
+                    "name": "NzInputModule",
+                    "type": "module"
+                },
+                {
+                    "name": "NzSelectModule",
+                    "type": "module"
+                },
+                {
+                    "name": "NzButtonModule",
+                    "type": "module"
+                },
+                {
+                    "name": "NzCheckboxModule",
+                    "type": "module"
+                },
+                {
+                    "name": "NzIconModule",
+                    "type": "module"
+                },
+                {
+                    "name": "NzSpinModule",
+                    "type": "module"
+                },
+                {
+                    "name": "Loader"
+                }
+            ],
+            "description": "",
+            "rawdescription": "\n",
+            "type": "component",
+            "sourceCode": "import { Component, EventEmitter, Output, signal } from '@angular/core';\r\nimport { ReactiveFormsModule, FormBuilder, Validators, FormGroup, FormsModule } from '@angular/forms';\r\nimport { NzFormModule } from 'ng-zorro-antd/form';\r\nimport { NzInputModule } from 'ng-zorro-antd/input';\r\nimport { NzSelectModule } from 'ng-zorro-antd/select';\r\nimport { NzButtonModule } from 'ng-zorro-antd/button';\r\nimport { NzCheckboxModule } from 'ng-zorro-antd/checkbox';\r\nimport { NzNotificationService } from 'ng-zorro-antd/notification';\r\nimport { Router } from '@angular/router';\r\nimport { Auth } from '../../../services/auth/auth';\r\nimport { CommonModule } from '@angular/common';\r\nimport { NzIconModule, NzIconService } from 'ng-zorro-antd/icon';\r\nimport { NzSpinModule } from 'ng-zorro-antd/spin';\r\nimport { icons } from '../../../shared/components/sidenav/icons-provider';\r\nimport { Loader } from '../../../shared/components/modal/loader/loader';\r\n\r\n\r\n\r\n@Component({\r\n  selector: 'app-register',\r\n  standalone: true,\r\n  imports: [\r\n    ReactiveFormsModule,\r\n    FormsModule,\r\n    CommonModule,\r\n    NzFormModule,\r\n    NzInputModule,\r\n    NzSelectModule,\r\n    NzButtonModule,\r\n    NzCheckboxModule,\r\n    NzIconModule,\r\n    NzSpinModule,\r\n    Loader\r\n  ],\r\n  templateUrl: './register.html',\r\n  styleUrls: ['./register.css']\r\n})\r\nexport class Register {\r\n  @Output() switchToLogin = new EventEmitter<void>(); // Event emitter to switch to login\r\n\r\n  loading = signal(false);\r\n  passwordVisibleCreate = false;\r\n  passwordVisibleConfirm = false;\r\n  form: FormGroup;\r\n\r\n  constructor(\r\n    private fb: FormBuilder,\r\n    private auth: Auth,\r\n    private router: Router,\r\n    private notify: NzNotificationService,\r\n    private iconService: NzIconService\r\n  ) {\r\n    this.form = this.fb.group({\r\n      firstName: ['', Validators.required],\r\n      lastName: ['', Validators.required],\r\n      email: ['', [Validators.required, Validators.email]],\r\n      phone: ['', [Validators.required, Validators.pattern(/^(\\+91)?[6-9]\\d{9}$/)]],\r\n      accountType: ['individual', Validators.required],\r\n      userType: ['admin', Validators.required],\r\n      password: ['', [Validators.required, Validators.minLength(6)]],\r\n      confirmPassword: ['', Validators.required],\r\n      agree: [true, Validators.requiredTrue]\r\n    });\r\n    this.iconService.addIcon(...icons);\r\n  }\r\n\r\n  togglePasswordCreate() { this.passwordVisibleCreate = !this.passwordVisibleCreate; }\r\n  togglePasswordConfirm() { this.passwordVisibleConfirm = !this.passwordVisibleConfirm; }\r\n\r\n  onSubmit() {\r\n    if (this.form.invalid || this.form.value.password !== this.form.value.confirmPassword) {\r\n      this.form.markAllAsTouched();\r\n      return;\r\n    }\r\n    this.loading.set(true);\r\n    const { confirmPassword, ...data } = this.form.value;\r\n    this.auth.register(data).subscribe({\r\n      next: () => {\r\n        setTimeout(() => {\r\n          this.loading.set(false);\r\n          this.notify.success('Success', 'Account created');\r\n          this.router.navigateByUrl('/auth/verify-email');\r\n        }, 1500);\r\n      },\r\n      error: (err) => {\r\n        this.loading.set(false);\r\n        this.notify.error('Registration failed', err?.message || 'Try again');\r\n      }\r\n    });\r\n  }\r\n}\r\n",
+            "assetsDirs": [],
+            "styleUrlsData": [
+                {
+                    "data": "",
+                    "styleUrl": "./register.css"
+                }
+            ],
+            "stylesData": "",
+            "constructorObj": {
+                "name": "constructor",
+                "description": "",
+                "deprecated": false,
+                "deprecationMessage": "",
+                "args": [
+                    {
+                        "name": "fb",
+                        "type": "FormBuilder",
+                        "deprecated": false,
+                        "deprecationMessage": ""
+                    },
+                    {
+                        "name": "auth",
+                        "type": "Auth",
+                        "deprecated": false,
+                        "deprecationMessage": ""
+                    },
+                    {
+                        "name": "router",
+                        "type": "Router",
+                        "deprecated": false,
+                        "deprecationMessage": ""
+                    },
+                    {
+                        "name": "notify",
+                        "type": "NzNotificationService",
+                        "deprecated": false,
+                        "deprecationMessage": ""
+                    },
+                    {
+                        "name": "iconService",
+                        "type": "NzIconService",
+                        "deprecated": false,
+                        "deprecationMessage": ""
+                    }
+                ],
+                "line": 44,
+                "jsdoctags": [
+                    {
+                        "name": "fb",
+                        "type": "FormBuilder",
+                        "deprecated": false,
+                        "deprecationMessage": "",
+                        "tagName": {
+                            "text": "param"
+                        }
+                    },
+                    {
+                        "name": "auth",
+                        "type": "Auth",
+                        "deprecated": false,
+                        "deprecationMessage": "",
+                        "tagName": {
+                            "text": "param"
+                        }
+                    },
+                    {
+                        "name": "router",
+                        "type": "Router",
+                        "deprecated": false,
+                        "deprecationMessage": "",
+                        "tagName": {
+                            "text": "param"
+                        }
+                    },
+                    {
+                        "name": "notify",
+                        "type": "NzNotificationService",
+                        "deprecated": false,
+                        "deprecationMessage": "",
+                        "tagName": {
+                            "text": "param"
+                        }
+                    },
+                    {
+                        "name": "iconService",
+                        "type": "NzIconService",
+                        "deprecated": false,
+                        "deprecationMessage": "",
+                        "tagName": {
+                            "text": "param"
+                        }
+                    }
+                ]
+            },
+            "extends": [],
+            "templateData": "<!-- Loader Overlay -->\r\n@if (loading()) {\r\n  <app-loader></app-loader>\r\n}\r\n\r\n<!-- Form container (still present under overlay but blocked by it) -->\r\n<form [formGroup]=\"form\" (ngSubmit)=\"onSubmit()\" nz-form class=\"space-y-4\">\r\n  <div class=\"grid grid-cols-1 md:grid-cols-2 gap-4\">\r\n    <div>\r\n      <label class=\"block mb-1 text-sm font-medium\">First Name</label>\r\n      <input nz-input placeholder=\"First Name\" formControlName=\"firstName\" class=\"!h-[32px]\" />\r\n      @if (form.get('firstName')?.invalid && form.get('firstName')?.touched) {\r\n        <div class=\"text-[#f5222d] text-sm\">\r\n          First Name is required\r\n        </div>\r\n      }\r\n    </div>\r\n    <div class=\"flex flex-col space-y-1\">\r\n      <label class=\"block mb-1 text-sm font-medium\">Last Name</label>\r\n      <input nz-input placeholder=\"Last Name\" formControlName=\"lastName\" class=\"!h-[32px]\" />\r\n      @if (form.get('lastName')?.invalid && form.get('lastName')?.touched) {\r\n        <div class=\"text-[#f5222d] text-sm\">\r\n          Last Name is required\r\n        </div>\r\n      }\r\n    </div>\r\n  </div>\r\n\r\n  <div class=\"flex flex-col space-y-1\">\r\n    <label class=\"block mb-1 text-sm font-medium\">Email</label>\r\n    <input nz-input placeholder=\"Email\" formControlName=\"email\" type=\"email\" class=\"!h-[32px]\" />\r\n    @if (form.get('email')?.invalid && form.get('email')?.touched) {\r\n      <div class=\"text-[#f5222d] text-sm\">\r\n        Email is required\r\n      </div>\r\n    }\r\n  </div>\r\n\r\n  <div class=\"flex flex-col space-y-1\">\r\n    <label class=\"block mb-1 text-sm font-medium\">Phone Number</label>\r\n    <div class=\"flex flex-row gap-2\">\r\n      <input nz-input class=\"!w-20\" value=\"+91\" disabled />\r\n      <input nz-input placeholder=\"Phone\" formControlName=\"phone\" class=\"!h-[32px]\" />\r\n    </div>\r\n    @if (form.get('phone')?.invalid && (form.get('phone')?.errors?.['required'] && form.get('phone')?.touched || form.get('phone')?.errors?.['pattern'])) {\r\n      <span class=\"text-[#f5222d] text-sm\">\r\n        {{\r\n          form.get('phone')?.errors?.['required']\r\n            ? 'Phone number is required'\r\n            : 'Invalid phone number. Please enter a valid Indian phone number.'\r\n        }}\r\n      </span>\r\n    }\r\n  </div>\r\n\r\n  <div class=\"grid grid-cols-1 md:grid-cols-2 gap-4 w-full\">\r\n    <div>\r\n      <label class=\"block mb-1 text-sm font-medium\">Account Type</label>\r\n      <nz-select formControlName=\"accountType\" class=\"!h-[32px] !w-full\">\r\n        @for (type of ['individual', 'organization']; track type) {\r\n          <nz-option [nzValue]=\"type\" [nzLabel]=\"type | titlecase\"></nz-option>\r\n        }\r\n      </nz-select>\r\n    </div>\r\n    <div class=\"w-full\">\r\n      <label class=\"block mb-1 text-sm font-medium\">User Type</label>\r\n      <nz-select formControlName=\"userType\" class=\"!h-[32px] !w-full\">\r\n        @for (role of ['admin', 'member']; track role) {\r\n          <nz-option [nzValue]=\"role\" [nzLabel]=\"role | titlecase\"></nz-option>\r\n        }\r\n      </nz-select>\r\n    </div>\r\n  </div>\r\n\r\n  <!-- Create password -->\r\n  <div>\r\n    <label class=\"block mb-1 text-sm font-medium\">Create Password</label>\r\n    <nz-input-group [nzSuffix]=\"suffixIcon\">\r\n      <input\r\n        nz-input\r\n        placeholder=\"Create New Password\"\r\n        [type]=\"passwordVisibleCreate ? 'text' : 'password'\"\r\n        formControlName=\"password\"\r\n      />\r\n    </nz-input-group>\r\n    <ng-template #suffixIcon>\r\n      <span (click)=\"togglePasswordCreate()\" class=\"cursor-pointer\">\r\n        <nz-icon [nzType]=\"passwordVisibleCreate ? 'eye-invisible' : 'eye'\"></nz-icon>\r\n      </span>\r\n    </ng-template>\r\n    @if (form.get('password')?.errors?.['required'] && form.get('password')?.touched) {\r\n      <span class=\"text-sm text-[#f5222d]\">\r\n        Password is required\r\n      </span>\r\n    }\r\n  </div>\r\n\r\n  <!-- Confirm password -->\r\n  <div>\r\n    <label class=\"block mb-1 text-sm font-medium\">Confirm Password</label>\r\n    <nz-input-group [nzSuffix]=\"confirmPasswordSuffixIcon\">\r\n      <input\r\n        nz-input\r\n        placeholder=\"Confirm Password\"\r\n        [type]=\"passwordVisibleConfirm ? 'text' : 'password'\"\r\n        formControlName=\"confirmPassword\"\r\n      />\r\n    </nz-input-group>\r\n    <ng-template #confirmPasswordSuffixIcon>\r\n      <span (click)=\"togglePasswordConfirm()\" class=\"cursor-pointer\">\r\n        <nz-icon [nzType]=\"passwordVisibleConfirm ? 'eye-invisible' : 'eye'\"></nz-icon>\r\n      </span>\r\n    </ng-template>\r\n    @if (form.get('confirmPassword')?.errors?.['required'] && form.get('confirmPassword')?.touched) {\r\n      <span class=\"text-sm text-[#f5222d]\">Confirm password is required</span>\r\n    }\r\n    @else if (form.get('password')?.value !== form.get('confirmPassword')?.value && form.get('confirmPassword')?.touched) {\r\n      <span class=\"text-sm text-[#f5222d]\">Passwords do not match</span>\r\n    }\r\n  </div>\r\n\r\n  <!-- Terms -->\r\n  <div class=\"flex\">\r\n    <label nz-checkbox formControlName=\"agree\" class=\"leading-6\">\r\n      I agree with all\r\n      <a class=\"text-blue-600 hover:underline cursor-pointer\">Terms & Conditions</a>\r\n      and\r\n      <a class=\"text-blue-600 hover:underline cursor-pointer\">Privacy Policy</a>\r\n      of Simulysis\r\n    </label>\r\n  </div>\r\n\r\n  <!-- Submit -->\r\n  <button\r\n    nz-button\r\n    nzType=\"primary\"\r\n    class=\"w-full\"\r\n    [disabled]=\"loading()\"\r\n    [nzLoading]=\"loading()\"\r\n  >\r\n    Register\r\n  </button>\r\n\r\n  <div class=\"text-left mt-2\">\r\n    <a class=\"text-sm cursor-pointer text-gray-600\" (click)=\"switchToLogin.emit()\">\r\n      Already have an account? Login\r\n    </a>\r\n  </div>\r\n</form>\r\n"
+        },
+        {
+            "name": "SelectAddon",
+            "id": "component-SelectAddon-3f6900a7114abaaf5808c0842cc0714bb94cf308721b1bd2073f1208a86e236efcd11deaf248e3324954085da6b20dc57bb967117d1f331cfdf1f5f7617a949e",
+            "file": "src/app/components/subscriptions/select-addon/select-addon.ts",
+            "encapsulation": [],
+            "entryComponents": [],
+            "inputs": [],
+            "outputs": [],
+            "providers": [],
+            "selector": "app-select-addon",
+            "styleUrls": [],
+            "styles": [],
+            "templateUrl": [
+                "./select-addon.html"
+            ],
+            "viewProviders": [],
+            "hostDirectives": [],
+            "inputsClass": [],
+            "outputsClass": [],
+            "propertiesClass": [
+                {
+                    "name": "addonMonthlyTotal",
+                    "defaultValue": "computed(() =>\r\n    this.chosen().reduce((sum, c) => {\r\n      const a = this.addons.find((z) => z.id === c.id);\r\n      return a ? sum + a.pricePerMonth * c.quantity : sum;\r\n    }, 0)\r\n  )",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "",
+                    "indexKey": "",
+                    "optional": false,
+                    "description": "",
+                    "line": 120
+                },
+                {
+                    "name": "addons",
+                    "defaultValue": "[\r\n    {\r\n      id: 'a1',\r\n      name: 'Addon name',\r\n      pricePerMonth: 199,\r\n      details: 'Addons details',\r\n    },\r\n    {\r\n      id: 'a2',\r\n      name: 'Addon name',\r\n      pricePerMonth: 99,\r\n      details: 'Addons details',\r\n    },\r\n  ]",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "Addon[]",
+                    "indexKey": "",
+                    "optional": false,
+                    "description": "",
+                    "line": 71
+                },
+                {
+                    "name": "addonsLine",
+                    "defaultValue": "computed(() =>\r\n    this.period() === 'annual'\r\n      ? this.addonMonthlyTotal() * 12\r\n      : this.addonMonthlyTotal()\r\n  )",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "",
+                    "indexKey": "",
+                    "optional": false,
+                    "description": "",
+                    "line": 126
+                },
+                {
+                    "name": "autoRenew",
+                    "defaultValue": "true",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "",
+                    "indexKey": "",
+                    "optional": false,
+                    "description": "",
+                    "line": 54
+                },
+                {
+                    "name": "chosen",
+                    "defaultValue": "signal<ChosenAddon[]>([\r\n    { id: 'a1', quantity: 0 },\r\n    { id: 'a2', quantity: 0 },\r\n  ])",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "",
+                    "indexKey": "",
+                    "optional": false,
+                    "description": "",
+                    "line": 88
+                },
+                {
+                    "name": "detailAddons",
+                    "defaultValue": "computed(() => {\r\n    const period = this.period();\r\n    const multiplier = period === 'annual' ? 12 : 1;\r\n    const suffix = period === 'annual' ? '/yr' : '/mo';\r\n\r\n\r\n    return this.chosen()\r\n      .filter(c => c.quantity > 0)\r\n      .map(c => {\r\n        const a = this.addons.find(z => z.id === c.id)!;\r\n        const unit = a.pricePerMonth;\r\n        const total = unit * c.quantity * multiplier;\r\n        return {\r\n          id: a.id,\r\n          name: a.name,\r\n          qty: c.quantity,\r\n          unit,           // monthly unit price\r\n          total,          // per selected period\r\n          suffix          // '/mo' or '/yr' for display\r\n        };\r\n      });\r\n  })",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "",
+                    "indexKey": "",
+                    "optional": false,
+                    "description": "",
+                    "line": 137
+                },
+                {
+                    "name": "orgs",
+                    "defaultValue": "['Acme Corp', 'Globex', 'Innotech']",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "[]",
+                    "indexKey": "",
+                    "optional": false,
+                    "description": "",
+                    "line": 53
+                },
+                {
+                    "name": "period",
+                    "defaultValue": "signal<Period>('monthly')",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "",
+                    "indexKey": "",
+                    "optional": false,
+                    "description": "",
+                    "line": 55
+                },
+                {
+                    "name": "proLine",
+                    "defaultValue": "computed(() =>\r\n    this.period() === 'annual' ? this.proMonthly * 12 : this.proMonthly\r\n  )",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "",
+                    "indexKey": "",
+                    "optional": false,
+                    "description": "",
+                    "line": 65
+                },
+                {
+                    "name": "proMonthly",
+                    "defaultValue": "1999",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "number",
+                    "indexKey": "",
+                    "optional": false,
+                    "description": "",
+                    "line": 64
+                },
+                {
+                    "name": "qtyOptions",
+                    "defaultValue": "[0, 1, 2, 3, 4, 5, 10]",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "[]",
+                    "indexKey": "",
+                    "optional": false,
+                    "description": "",
+                    "line": 85
+                },
+                {
+                    "name": "selectedOrg",
+                    "defaultValue": "null",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "string | null",
+                    "indexKey": "",
+                    "optional": false,
+                    "description": "",
+                    "line": 52
+                },
+                {
+                    "name": "subtotal",
+                    "defaultValue": "computed(() => this.proLine() + this.addonsLine())",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "",
+                    "indexKey": "",
+                    "optional": false,
+                    "description": "",
+                    "line": 133
+                }
+            ],
+            "methodsClass": [
+                {
+                    "name": "add",
+                    "args": [
+                        {
+                            "name": "id",
+                            "type": "string",
+                            "deprecated": false,
+                            "deprecationMessage": ""
+                        }
+                    ],
+                    "optional": false,
+                    "returnType": "void",
+                    "typeParameters": [],
+                    "line": 104,
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "jsdoctags": [
+                        {
+                            "name": "id",
+                            "type": "string",
+                            "deprecated": false,
+                            "deprecationMessage": "",
+                            "tagName": {
+                                "text": "param"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "getQty",
+                    "args": [
+                        {
+                            "name": "id",
+                            "type": "string",
+                            "deprecated": false,
+                            "deprecationMessage": ""
+                        }
+                    ],
+                    "optional": false,
+                    "returnType": "any",
+                    "typeParameters": [],
+                    "line": 94,
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "jsdoctags": [
+                        {
+                            "name": "id",
+                            "type": "string",
+                            "deprecated": false,
+                            "deprecationMessage": "",
+                            "tagName": {
+                                "text": "param"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "goBack",
+                    "args": [],
+                    "optional": false,
+                    "returnType": "void",
+                    "typeParameters": [],
+                    "line": 171,
+                    "deprecated": false,
+                    "deprecationMessage": ""
+                },
+                {
+                    "name": "increment",
+                    "args": [
+                        {
+                            "name": "id",
+                            "type": "string",
+                            "deprecated": false,
+                            "deprecationMessage": ""
+                        }
+                    ],
+                    "optional": false,
+                    "returnType": "void",
+                    "typeParameters": [],
+                    "line": 110,
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "jsdoctags": [
+                        {
+                            "name": "id",
+                            "type": "string",
+                            "deprecated": false,
+                            "deprecationMessage": "",
+                            "tagName": {
+                                "text": "param"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "next",
+                    "args": [],
+                    "optional": false,
+                    "returnType": "void",
+                    "typeParameters": [],
+                    "line": 161,
+                    "deprecated": false,
+                    "deprecationMessage": ""
+                },
+                {
+                    "name": "remove",
+                    "args": [
+                        {
+                            "name": "id",
+                            "type": "string",
+                            "deprecated": false,
+                            "deprecationMessage": ""
+                        }
+                    ],
+                    "optional": false,
+                    "returnType": "void",
+                    "typeParameters": [],
+                    "line": 114,
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "jsdoctags": [
+                        {
+                            "name": "id",
+                            "type": "string",
+                            "deprecated": false,
+                            "deprecationMessage": "",
+                            "tagName": {
+                                "text": "param"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "setQty",
+                    "args": [
+                        {
+                            "name": "id",
+                            "type": "string",
+                            "deprecated": false,
+                            "deprecationMessage": ""
+                        },
+                        {
+                            "name": "q",
+                            "type": "number",
+                            "deprecated": false,
+                            "deprecationMessage": ""
+                        }
+                    ],
+                    "optional": false,
+                    "returnType": "void",
+                    "typeParameters": [],
+                    "line": 97,
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "jsdoctags": [
+                        {
+                            "name": "id",
+                            "type": "string",
+                            "deprecated": false,
+                            "deprecationMessage": "",
+                            "tagName": {
+                                "text": "param"
+                            }
+                        },
+                        {
+                            "name": "q",
+                            "type": "number",
+                            "deprecated": false,
+                            "deprecationMessage": "",
+                            "tagName": {
+                                "text": "param"
+                            }
+                        }
+                    ]
+                }
+            ],
+            "deprecated": false,
+            "deprecationMessage": "",
+            "hostBindings": [],
+            "hostListeners": [],
+            "standalone": false,
+            "imports": [
+                {
+                    "name": "CommonModule",
+                    "type": "module"
+                },
+                {
+                    "name": "FormsModule",
+                    "type": "module"
+                },
+                {
+                    "name": "RouterModule",
+                    "type": "module"
+                },
+                {
+                    "name": "NzStepsModule",
+                    "type": "module"
+                },
+                {
+                    "name": "NzButtonModule",
+                    "type": "module"
+                },
+                {
+                    "name": "NzIconModule",
+                    "type": "module"
+                },
+                {
+                    "name": "NzSelectModule",
+                    "type": "module"
+                },
+                {
+                    "name": "NzSwitchModule",
+                    "type": "module"
+                },
+                {
+                    "name": "NzDividerModule",
+                    "type": "module"
+                },
+                {
+                    "name": "NzTableModule",
+                    "type": "module"
+                }
+            ],
+            "description": "",
+            "rawdescription": "\n",
+            "type": "component",
+            "sourceCode": "import { Component, computed, signal } from '@angular/core';\r\nimport { RouterModule } from '@angular/router';\r\nimport { CommonModule } from '@angular/common';\r\nimport { NzStepsModule } from 'ng-zorro-antd/steps';\r\nimport { NzButtonModule } from 'ng-zorro-antd/button';\r\nimport { NzIconModule } from 'ng-zorro-antd/icon';\r\nimport { NzSelectModule } from 'ng-zorro-antd/select';\r\nimport { NzSwitchModule } from 'ng-zorro-antd/switch';\r\nimport { NzDividerModule } from 'ng-zorro-antd/divider';\r\nimport { NzTableModule } from 'ng-zorro-antd/table';\r\nimport { FormsModule } from '@angular/forms';\r\nimport { NzIconService } from 'ng-zorro-antd/icon';\r\nimport { icons } from '../../../shared/components/sidenav/icons-provider';\r\nimport { NgFor } from '@angular/common';\r\n\r\n\r\ntype Period = 'monthly' | 'annual';\r\n\r\n\r\ninterface Addon {\r\n  id: string;\r\n  name: string;\r\n  pricePerMonth: number; // base price per 1 unit per month\r\n  details: string;\r\n  icon?: string;\r\n}\r\ninterface ChosenAddon {\r\n  id: string;\r\n  quantity: number;\r\n}\r\n\r\n\r\n@Component({\r\n  selector: 'app-select-addon',\r\n  imports: [\r\n    CommonModule,\r\n    FormsModule,\r\n    RouterModule,\r\n    NzStepsModule,\r\n    NzButtonModule,\r\n    NzIconModule,\r\n    NzSelectModule,\r\n    NzSwitchModule,\r\n    NzDividerModule,\r\n    NzTableModule,\r\n  ],\r\n  templateUrl: './select-addon.html',\r\n  styleUrl: './select-addon.css',\r\n})\r\nexport class SelectAddon {\r\n  // Top state\r\n  selectedOrg: string | null = null;\r\n  orgs = ['Acme Corp', 'Globex', 'Innotech'];\r\n  autoRenew = true;\r\n  period = signal<Period>('monthly');\r\n\r\n\r\n  constructor(private iconService: NzIconService) {\r\n    this.iconService.addIcon(...icons);\r\n  }\r\n\r\n\r\n  // Base pro plan pricing\r\n  proMonthly = 1999; // example\r\n  proLine = computed(() =>\r\n    this.period() === 'annual' ? this.proMonthly * 12 : this.proMonthly\r\n  );\r\n\r\n\r\n  // Addons catalog\r\n  addons: Addon[] = [\r\n    {\r\n      id: 'a1',\r\n      name: 'Addon name',\r\n      pricePerMonth: 199,\r\n      details: 'Addons details',\r\n    },\r\n    {\r\n      id: 'a2',\r\n      name: 'Addon name',\r\n      pricePerMonth: 99,\r\n      details: 'Addons details',\r\n    },\r\n  ];\r\n  qtyOptions = [0, 1, 2, 3, 4, 5, 10];\r\n\r\n\r\n  chosen = signal<ChosenAddon[]>([\r\n    { id: 'a1', quantity: 0 },\r\n    { id: 'a2', quantity: 0 },\r\n  ]);\r\n\r\n\r\n  getQty(id: string) {\r\n    return this.chosen().find((x) => x.id === id)?.quantity ?? 0;\r\n  }\r\n  setQty(id: string, q: number) {\r\n    this.chosen.update((list) =>\r\n      list.map((x) => (x.id === id ? { ...x, quantity: q } : x))\r\n    );\r\n  }\r\n\r\n\r\n  add(id: string) {\r\n    // set default quantity to 1 when first adding\r\n    if (this.getQty(id) === 0) this.setQty(id, 1);\r\n  }\r\n\r\n\r\n  increment(id: string) {\r\n    const current = this.getQty(id);\r\n    this.setQty(id, current + 1);\r\n  }\r\n  remove(id: string) {\r\n    this.setQty(id, 0);\r\n  }\r\n\r\n\r\n  // Addons totals\r\n  addonMonthlyTotal = computed(() =>\r\n    this.chosen().reduce((sum, c) => {\r\n      const a = this.addons.find((z) => z.id === c.id);\r\n      return a ? sum + a.pricePerMonth * c.quantity : sum;\r\n    }, 0)\r\n  );\r\n  addonsLine = computed(() =>\r\n    this.period() === 'annual'\r\n      ? this.addonMonthlyTotal() * 12\r\n      : this.addonMonthlyTotal()\r\n  );\r\n\r\n\r\n  subtotal = computed(() => this.proLine() + this.addonsLine());\r\n\r\n\r\n  // --- Billing detail lines (each selected add-on)\r\n  detailAddons = computed(() => {\r\n    const period = this.period();\r\n    const multiplier = period === 'annual' ? 12 : 1;\r\n    const suffix = period === 'annual' ? '/yr' : '/mo';\r\n\r\n\r\n    return this.chosen()\r\n      .filter(c => c.quantity > 0)\r\n      .map(c => {\r\n        const a = this.addons.find(z => z.id === c.id)!;\r\n        const unit = a.pricePerMonth;\r\n        const total = unit * c.quantity * multiplier;\r\n        return {\r\n          id: a.id,\r\n          name: a.name,\r\n          qty: c.quantity,\r\n          unit,           // monthly unit price\r\n          total,          // per selected period\r\n          suffix          // '/mo' or '/yr' for display\r\n        };\r\n      });\r\n  });\r\n\r\n\r\n  next() {\r\n    // navigate to payment or emit event\r\n    console.log('Proceed to payment details', {\r\n      org: this.selectedOrg,\r\n      autoRenew: this.autoRenew,\r\n      period: this.period(),\r\n      chosen: this.chosen(),\r\n      subtotal: this.subtotal(),\r\n    });\r\n  }\r\n  goBack() {\r\n    history.back();\r\n  }\r\n}\r\n\r\n\r\n\r\n",
+            "styleUrl": "./select-addon.css",
+            "assetsDirs": [],
+            "styleUrlsData": "",
+            "stylesData": "",
+            "constructorObj": {
+                "name": "constructor",
+                "description": "",
+                "deprecated": false,
+                "deprecationMessage": "",
+                "args": [
+                    {
+                        "name": "iconService",
+                        "type": "NzIconService",
+                        "deprecated": false,
+                        "deprecationMessage": ""
+                    }
+                ],
+                "line": 55,
+                "jsdoctags": [
+                    {
+                        "name": "iconService",
+                        "type": "NzIconService",
+                        "deprecated": false,
+                        "deprecationMessage": "",
+                        "tagName": {
+                            "text": "param"
+                        }
+                    }
+                ]
+            },
+            "extends": [],
+            "templateData": "<div class=\"min-h-screen bg-gray-50\">\r\n  <!-- Top bar: Back + Steps -->\r\n  <div class=\"bg-neutral-800 text-white w-full\">\r\n    <div class=\"max-w-6xl py-3 flex gap-10\">\r\n      <div class=\"flex items-left w-[10%] mr-auto px-4\">\r\n        <button\r\n          nz-button\r\n          nzType=\"link\"\r\n          class=\"!text-white !px-0 contain\"\r\n          (click)=\"goBack()\"\r\n        >\r\n          Back\r\n        </button>\r\n      </div>\r\n\r\n      <div class=\"flex w-[60%] justify-center\">\r\n        <nz-steps [nzCurrent]=\"0\" nzSize=\"small\" class=\"flex-1\">\r\n          <nz-step nzTitle=\"Select addons\" class=\"!text-white\"></nz-step>\r\n          <nz-step nzTitle=\"payment details\" class=\"!text-white\"></nz-step>\r\n          <nz-step nzTitle=\"order summary\" class=\"!text-white\"></nz-step>\r\n        </nz-steps>\r\n      </div>\r\n    </div>\r\n  </div>\r\n\r\n  <!-- Content -->\r\n  <div class=\"max-w-6xl px-[10%] py-12 grid grid-cols-2\">\r\n    <!-- Left: Summary card -->\r\n    <div class=\"bg-white rounded-xl shadow md:p-5 min-w-[360px] max-w-[360px]\">\r\n      <h3 class=\"text-lg font-semibold\">You select pro plan</h3>\r\n\r\n      <div class=\"mt-4 space-y-4\">\r\n        <!-- Organization -->\r\n        <div>\r\n          <label class=\"text-sm text-gray-600 mb-1 block\">select organization</label>\r\n          <nz-select\r\n            [(ngModel)]=\"selectedOrg\"\r\n            nzPlaceHolder=\"select organization\"\r\n            class=\"w-full\"\r\n          >\r\n            @for (org of orgs; track org) {\r\n              <nz-option [nzLabel]=\"org\" [nzValue]=\"org\"></nz-option>\r\n            }\r\n          </nz-select>\r\n        </div>\r\n\r\n        <!-- Auto renewal -->\r\n        <div class=\"flex items-center justify-between\">\r\n          <span class=\"text-sm text-gray-600\">Auto renewal</span>\r\n          <nz-switch [(ngModel)]=\"autoRenew\"></nz-switch>\r\n        </div>\r\n\r\n        <!-- Billing period -->\r\n        <div class=\"flex gap-2\">\r\n          <label class=\"sr-only\">Billing period</label>\r\n          <button\r\n            nz-button\r\n            [nzType]=\"'default'\"\r\n            [ngClass]=\"period() === 'monthly' ? 'border-blue-500 text-blue-600' : ''\"\r\n            class=\"flex-1\"\r\n            (click)=\"period.set('monthly')\"\r\n          >\r\n            monthly\r\n          </button>\r\n          <button\r\n            nz-button\r\n            [nzType]=\"'default'\"\r\n            [ngClass]=\"period() === 'annual' ? 'border-blue-500 text-blue-600' : ''\"\r\n            class=\"flex-1\"\r\n            (click)=\"period.set('annual')\"\r\n          >\r\n            Annual ( save 25 % )\r\n          </button>\r\n        </div>\r\n\r\n        <nz-divider></nz-divider>\r\n\r\n        <!-- Lines -->\r\n        <div class=\"text-sm flex justify-between\">\r\n          <span>Pro plan</span>\r\n          <span>₹ {{ proLine() | number : \"1.0-0\" }}</span>\r\n        </div>\r\n        <div class=\"text-xs text-gray-500\">\r\n          ₹ {{ proMonthly | number : \"1.0-0\" }} /mo ×\r\n          {{ period() === \"annual\" ? \"12 mo\" : \"1 mo\" }}\r\n        </div>\r\n\r\n        <!-- Addons -->\r\n        <div class=\"mt-3 text-sm font-medium\">Addons</div>\r\n        <div class=\"mt-2 space-y-1\">\r\n          @for (line of detailAddons(); track line) {\r\n            <div class=\"flex justify-between text-sm\">\r\n              <div class=\"text-xs text-gray-500\">\r\n                ₹ {{ line.unit | number : \"1.0-0\" }} × {{ line.qty }} ×\r\n                {{ period() === \"annual\" ? \"12 mo\" : \"1 mo\" }}\r\n              </div>\r\n              <span>₹ {{ line.total | number : \"1.0-0\" }}</span>\r\n            </div>\r\n          }\r\n        </div>\r\n\r\n        <nz-divider></nz-divider>\r\n\r\n        <div class=\"text-sm flex justify-between font-medium\">\r\n          <span>Subtotal</span>\r\n          <span>₹ {{ subtotal() | number : \"1.0-0\" }}</span>\r\n        </div>\r\n        <div class=\"text-xs text-gray-500\">\r\n          see your total (include tax) in final page\r\n        </div>\r\n\r\n        <button nz-button nzType=\"primary\" class=\"w-full mt-4\" (click)=\"next()\">\r\n          Next : Review your order\r\n        </button>\r\n      </div>\r\n    </div>\r\n\r\n    <!-- Right: Add-ons list -->\r\n    <div class=\"bg-white rounded-xl shadow p-0 min-w-[850px]\">\r\n      <div class=\"px-4 py-4\">\r\n        <h3 class=\"text-sm font-normal text-[#262626]\">\r\n          Select addons to push your limit as per your requirement\r\n        </h3>\r\n      </div>\r\n\r\n      <!-- Table -->\r\n      <div class=\"grid grid-cols-[1fr,1fr,160px] px-5 py-2 text-sm text-gray-500\">\r\n        <nz-table\r\n          nzTemplateMode\r\n          [nzShowPagination]=\"false\"\r\n          [nzBordered]=\"false\"\r\n          class=\"!bg-transparent\"\r\n          [nzWidthConfig]=\"['auto', 'auto', '160px']\"\r\n        >\r\n          <thead>\r\n            <tr>\r\n              <th class=\"!px-5 !py-3 !font-normal !pr-8\">Addons</th>\r\n              <th class=\"!px-5 !py-3 !font-normal !pr-8\">includes</th>\r\n              <th class=\"!px-5 !py-3 !font-normal !pr-8\">Quantity</th>\r\n            </tr>\r\n          </thead>\r\n          <tbody>\r\n            @for (a of addons; track a.id) {\r\n              <tr class=\"align-middle\">\r\n                <!-- Addon meta -->\r\n                <td class=\"!px-5 !py-3\">\r\n                  <div class=\"flex items-center gap-3\">\r\n                    <span\r\n                      class=\"w-12 h-12 rounded-full bg-[#0A56EE] text-white grid place-items-center\"\r\n                    >\r\n                      <span nz-icon nzType=\"diff\" nzTheme=\"outline\" class=\"text-2xl\"></span>\r\n                    </span>\r\n                    <div>\r\n                      <div class=\"font-medium\">{{ a.name }}</div>\r\n                      <div class=\"text-xs text-gray-500\">\r\n                        ₹ {{ a.pricePerMonth | number : \"1.0-0\" }} /mo\r\n                      </div>\r\n                    </div>\r\n                  </div>\r\n                </td>\r\n\r\n                <!-- Details -->\r\n                <td class=\"!px-5 !py-3 text-sm text-gray-600\">\r\n                  {{ a.details }}\r\n                </td>\r\n\r\n                <!-- Quantity controls -->\r\n                <td class=\"!px-5 !py-3\">\r\n                  <div class=\"flex items-center justify-center gap-2 pr-2\">\r\n                    @if (getQty(a.id) === 0) {\r\n                      <button\r\n                        nz-button\r\n                        nzType=\"primary\"\r\n                        nzSize=\"small\"\r\n                        (click)=\"add(a.id)\"\r\n                      >\r\n                        <span nz-icon nzType=\"plus\"></span>\r\n                      </button>\r\n                    } @else {\r\n                      <nz-select\r\n                        [ngModel]=\"getQty(a.id)\"\r\n                        (ngModelChange)=\"setQty(a.id, $event)\"\r\n                        class=\"w-28\"\r\n                      >\r\n                        @for (q of qtyOptions; track q) {\r\n                          <nz-option [nzLabel]=\"q\" [nzValue]=\"q\"></nz-option>\r\n                        }\r\n                      </nz-select>\r\n\r\n                      <button\r\n                        nz-button\r\n                        nzDanger\r\n                        nzShape=\"circle\"\r\n                        nzSize=\"small\"\r\n                        (click)=\"remove(a.id)\"\r\n                        nz-tooltip\r\n                        nzTooltipTitle=\"Remove\"\r\n                      >\r\n                        <span nz-icon nzType=\"delete\"></span>\r\n                      </button>\r\n                    }\r\n                  </div>\r\n                </td>\r\n              </tr>\r\n            }\r\n          </tbody>\r\n        </nz-table>\r\n      </div>\r\n    </div>\r\n  </div>\r\n</div>\r\n"
+        },
+        {
+            "name": "Sidenav",
+            "id": "component-Sidenav-0c7b8ebefbfce1dfb355db5a612396204561fb8c924a06a4539d0806cdb5e73abe65fb67ef3eca2d086bbf8d2f0c68c58ba6cc7c5ee3fb517e15fa71e1c72731",
+            "file": "src/app/shared/components/sidenav/sidenav.ts",
+            "encapsulation": [],
+            "entryComponents": [],
+            "inputs": [],
+            "outputs": [],
+            "providers": [],
+            "selector": "app-sidenav",
+            "styleUrls": [],
+            "styles": [],
+            "templateUrl": [
+                "./sidenav.html"
+            ],
+            "viewProviders": [],
+            "hostDirectives": [],
+            "inputsClass": [],
+            "outputsClass": [],
+            "propertiesClass": [
+                {
+                    "name": "isCollapsed",
+                    "defaultValue": "false",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "",
+                    "indexKey": "",
+                    "optional": false,
+                    "description": "",
+                    "line": 29
+                },
+                {
+                    "name": "menus",
+                    "defaultValue": "[\r\n    {\r\n      title: 'Dashboard',\r\n      icon: 'pie-chart-o',\r\n      open: true,\r\n      items: [\r\n        { label: 'Dashboard', link: '/dashboard' },\r\n        { label: 'Upload Data', link: '/upload-data' },\r\n        { label: 'Create System', link: '/create-system' },\r\n        { label: 'Edit/Config', link: '/edit-config' },\r\n        { label: 'All System', link: '/all-system' },\r\n      ],\r\n    },\r\n    {\r\n      title: 'Organization',\r\n      icon: 'apartment',\r\n      open: false,\r\n      items: [\r\n        { label: 'Team', link: '/team' },\r\n        { label: 'Members', link: '/member' },\r\n        { label: 'Rules', link: '/rules' },\r\n        { label: 'Permissions', link: '/permissions' },\r\n      ],\r\n    },\r\n    {\r\n      title: 'Payments',\r\n      icon: 'credit-card',\r\n      open: false,\r\n      items: [\r\n        { label: 'Payment Method', link: '/payment-method' },\r\n        { label: 'Transaction History', link: '/transaction-history' },\r\n        { label: 'Invoces', link: '/invoices' },\r\n      ],\r\n    },\r\n    {\r\n      title: 'Subscription',\r\n      icon: 'dollar',\r\n      open: false,\r\n      items: [{ label: 'Billing', link: '/billing' },\r\n        { label: 'Subscriptions', link: '/subscriptions' }\r\n      ],\r\n    },\r\n    {\r\n      title: 'Help & Support',\r\n      icon: 'question-circle',\r\n      open: false,\r\n      items: [{ label: 'Ticket', link: '/ticket' }],\r\n    },\r\n    {\r\n      title: 'Setting',\r\n      icon: 'setting',\r\n      open: false,\r\n      items: [\r\n        { label: 'Profile Details', link: '/profile' },\r\n        { label: 'Security', link: '/security' },\r\n        { label: 'Account', link: '/account' },\r\n      ],\r\n    },\r\n  ]",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "[]",
+                    "indexKey": "",
+                    "optional": false,
+                    "description": "",
+                    "line": 31
+                }
+            ],
+            "methodsClass": [],
+            "deprecated": false,
+            "deprecationMessage": "",
+            "hostBindings": [],
+            "hostListeners": [],
+            "standalone": false,
+            "imports": [
+                {
+                    "name": "CommonModule",
+                    "type": "module"
+                },
+                {
+                    "name": "RouterModule",
+                    "type": "module"
+                },
+                {
+                    "name": "NzIconModule",
+                    "type": "module"
+                },
+                {
+                    "name": "NzLayoutModule",
+                    "type": "module"
+                },
+                {
+                    "name": "NzMenuModule",
+                    "type": "module"
+                },
+                {
+                    "name": "RouterLink"
+                }
+            ],
+            "description": "",
+            "rawdescription": "\n",
+            "type": "component",
+            "sourceCode": "import { Component } from '@angular/core';\r\nimport { RouterLink, RouterOutlet } from '@angular/router';\r\nimport { NzIconModule } from 'ng-zorro-antd/icon';\r\nimport { NzLayoutModule } from 'ng-zorro-antd/layout';\r\nimport { NzMenuModule } from 'ng-zorro-antd/menu';\r\nimport { NzIconService } from 'ng-zorro-antd/icon';\r\nimport { SettingOutline } from '@ant-design/icons-angular/icons';\r\nimport { RouterModule } from '@angular/router';\r\nimport { icons } from './icons-provider';\r\nimport { CommonModule } from '@angular/common';\r\n\r\n@Component({\r\n  selector: 'app-sidenav',\r\n  imports: [\r\n    CommonModule,\r\n    RouterModule,\r\n    NzIconModule,\r\n    NzLayoutModule,\r\n    NzMenuModule,\r\n    RouterLink,\r\n  ],\r\n  templateUrl: './sidenav.html',\r\n  styleUrl: './sidenav.css',\r\n})\r\nexport class Sidenav {\r\n  constructor(private iconService: NzIconService) {\r\n    this.iconService.addIcon(...icons);\r\n  }\r\n  isCollapsed = false;\r\n\r\n  menus = [\r\n    {\r\n      title: 'Dashboard',\r\n      icon: 'pie-chart-o',\r\n      open: true,\r\n      items: [\r\n        { label: 'Dashboard', link: '/dashboard' },\r\n        { label: 'Upload Data', link: '/upload-data' },\r\n        { label: 'Create System', link: '/create-system' },\r\n        { label: 'Edit/Config', link: '/edit-config' },\r\n        { label: 'All System', link: '/all-system' },\r\n      ],\r\n    },\r\n    {\r\n      title: 'Organization',\r\n      icon: 'apartment',\r\n      open: false,\r\n      items: [\r\n        { label: 'Team', link: '/team' },\r\n        { label: 'Members', link: '/member' },\r\n        { label: 'Rules', link: '/rules' },\r\n        { label: 'Permissions', link: '/permissions' },\r\n      ],\r\n    },\r\n    {\r\n      title: 'Payments',\r\n      icon: 'credit-card',\r\n      open: false,\r\n      items: [\r\n        { label: 'Payment Method', link: '/payment-method' },\r\n        { label: 'Transaction History', link: '/transaction-history' },\r\n        { label: 'Invoces', link: '/invoices' },\r\n      ],\r\n    },\r\n    {\r\n      title: 'Subscription',\r\n      icon: 'dollar',\r\n      open: false,\r\n      items: [{ label: 'Billing', link: '/billing' },\r\n        { label: 'Subscriptions', link: '/subscriptions' }\r\n      ],\r\n    },\r\n    {\r\n      title: 'Help & Support',\r\n      icon: 'question-circle',\r\n      open: false,\r\n      items: [{ label: 'Ticket', link: '/ticket' }],\r\n    },\r\n    {\r\n      title: 'Setting',\r\n      icon: 'setting',\r\n      open: false,\r\n      items: [\r\n        { label: 'Profile Details', link: '/profile' },\r\n        { label: 'Security', link: '/security' },\r\n        { label: 'Account', link: '/account' },\r\n      ],\r\n    },\r\n  ];\r\n}\r\n",
+            "styleUrl": "./sidenav.css",
+            "assetsDirs": [],
+            "styleUrlsData": "",
+            "stylesData": "",
+            "constructorObj": {
+                "name": "constructor",
+                "description": "",
+                "deprecated": false,
+                "deprecationMessage": "",
+                "args": [
+                    {
+                        "name": "iconService",
+                        "type": "NzIconService",
+                        "deprecated": false,
+                        "deprecationMessage": ""
+                    }
+                ],
+                "line": 25,
+                "jsdoctags": [
+                    {
+                        "name": "iconService",
+                        "type": "NzIconService",
+                        "deprecated": false,
+                        "deprecationMessage": "",
+                        "tagName": {
+                            "text": "param"
+                        }
+                    }
+                ]
+            },
+            "extends": [],
+            "templateData": "<nz-layout class=\"app-layout\">\r\n  <nz-sider\r\n    class=\"menu-sidebar\"\r\n    nzCollapsible\r\n    nzWidth=\"256px\"\r\n    nzBreakpoint=\"md\"\r\n    [(nzCollapsed)]=\"isCollapsed\"\r\n    [nzTrigger]=\"null\"\r\n  >\r\n    <div class=\"sidebar-logo\">\r\n      <a href=\"https://ng.ant.design/\" target=\"_blank\">\r\n        <img src=\"https://ng.ant.design/assets/img/logo.svg\" alt=\"logo\" />\r\n        @if (!isCollapsed) {\r\n          <h1>Simulysis</h1>\r\n        }\r\n      </a>\r\n    </div>\r\n\r\n    <ul nz-menu nzTheme=\"light\" nzMode=\"inline\" [nzInlineCollapsed]=\"isCollapsed\">\r\n      <!-- new menu -->\r\n      @for (menu of menus; track menu.title) {\r\n        <li nz-submenu [nzOpen]=\"menu.open\" [nzTitle]=\"menu.title\" [nzIcon]=\"menu.icon\">\r\n          <ul>\r\n            @for (item of menu.items; track item.label) {\r\n              <li nz-menu-item nzMatchRouter>\r\n                <a [routerLink]=\"item.link\">{{ item.label }}</a>\r\n              </li>\r\n            }\r\n          </ul>\r\n        </li>\r\n      }\r\n      <!-- end menu -->\r\n    </ul>\r\n\r\n    <!-- upgrade card -->\r\n    @if (!isCollapsed) {\r\n      <div\r\n        class=\"bg-indigo-500 rounded-2xl p-6 text-white flex flex-col items-center justify-center m-4 mt-20 shadow-md text-center\"\r\n      >\r\n        <!-- Icon -->\r\n        <div class=\"bg-white p-3 rounded-lg flex items-center justify-center w-10 h-10\">\r\n          <i nz-icon nzType=\"upload\" nzTheme=\"outline\" class=\"!text-indigo-500 !text-base\"></i>\r\n        </div>\r\n\r\n        <!-- Text -->\r\n        <p class=\"mt-4 mb-6 text-sm leading-relaxed\">\r\n          Upgrade plan with unlimited usages\r\n        </p>\r\n\r\n        <!-- Button -->\r\n        <button\r\n          nz-button\r\n          class=\"!bg-white !text-indigo-500 !font-medium !px-5 !py-2 !rounded-lg !shadow-sm !flex !items-center !justify-center !hover:bg-gray-100 !transition\"\r\n        >\r\n          View plans\r\n        </button>\r\n      </div>\r\n    }\r\n    <!-- ugrade card end -->\r\n  </nz-sider>\r\n\r\n  <nz-layout class=\"!bg-white\">\r\n    <nz-header>\r\n      <div class=\"app-header\">\r\n        <span class=\"header-trigger\" (click)=\"isCollapsed = !isCollapsed\">\r\n          <nz-icon class=\"trigger\" [nzType]=\"isCollapsed ? 'menu-unfold-o' : 'menu-fold-o'\" />\r\n        </span>\r\n      </div>\r\n    </nz-header>\r\n\r\n    <nz-content>\r\n      <div class=\"inner-content\">\r\n        <router-outlet></router-outlet>\r\n      </div>\r\n    </nz-content>\r\n  </nz-layout>\r\n</nz-layout>\r\n"
+        },
+        {
+            "name": "SubscriptionCard",
+            "id": "component-SubscriptionCard-f8e02c59fe3fb7abd78234c567d4cfe29a2693d74ae132fffb069caf8ed2478e7575509823b56672f6ffe46bde2873c91b12d8d837d7ae0b6cf350611df99097",
+            "file": "src/app/shared/components/subscription-card/subscription-card.ts",
+            "encapsulation": [],
+            "entryComponents": [],
+            "inputs": [],
+            "outputs": [],
+            "providers": [],
+            "selector": "app-subscription-card",
+            "styleUrls": [],
+            "styles": [],
+            "templateUrl": [
+                "./subscription-card.html"
+            ],
+            "viewProviders": [],
+            "hostDirectives": [],
+            "inputsClass": [
+                {
+                    "name": "billing",
+                    "defaultValue": "'monthly'",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "line": 41,
+                    "type": "BillingPeriod",
+                    "decorators": []
+                },
+                {
+                    "name": "ctaDisabled",
+                    "defaultValue": "false",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "line": 46,
+                    "type": "boolean",
+                    "decorators": []
+                },
+                {
+                    "name": "ctaText",
+                    "defaultValue": "'Choose plan'",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "line": 45,
+                    "type": "string",
+                    "decorators": []
+                },
+                {
+                    "name": "features",
+                    "defaultValue": "[]",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "line": 44,
+                    "type": "string[]",
+                    "decorators": []
+                },
+                {
+                    "name": "price",
+                    "defaultValue": "null",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "line": 40,
+                    "type": "string | null",
+                    "decorators": []
+                },
+                {
+                    "name": "recommended",
+                    "defaultValue": "false",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "line": 36,
+                    "type": "boolean",
+                    "decorators": []
+                },
+                {
+                    "name": "showBillingToggle",
+                    "defaultValue": "false",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "line": 39,
+                    "type": "boolean",
+                    "decorators": []
+                },
+                {
+                    "name": "showPrice",
+                    "defaultValue": "true",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "line": 37,
+                    "type": "boolean",
+                    "decorators": []
+                },
+                {
+                    "name": "subtitle",
+                    "defaultValue": "''",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "line": 35,
+                    "type": "string",
+                    "decorators": []
+                },
+                {
+                    "name": "title",
+                    "defaultValue": "''",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "line": 34,
+                    "type": "string",
+                    "decorators": []
+                }
+            ],
+            "outputsClass": [
+                {
+                    "name": "billingChange",
+                    "defaultValue": "new EventEmitter<BillingPeriod>()",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "line": 42,
+                    "type": "EventEmitter"
+                },
+                {
+                    "name": "select",
+                    "defaultValue": "new EventEmitter<void>()",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "line": 47,
+                    "type": "EventEmitter"
+                }
+            ],
+            "propertiesClass": [
+                {
+                    "name": "periodLabel",
+                    "defaultValue": "computed(() => (this.billing === 'annual' ? 'year' : 'month'))",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "",
+                    "indexKey": "",
+                    "optional": false,
+                    "description": "",
+                    "line": 49
+                }
+            ],
+            "methodsClass": [
+                {
+                    "name": "onBillingChange",
+                    "args": [
+                        {
+                            "name": "val",
+                            "type": "BillingPeriod",
+                            "deprecated": false,
+                            "deprecationMessage": ""
+                        }
+                    ],
+                    "optional": false,
+                    "returnType": "void",
+                    "typeParameters": [],
+                    "line": 51,
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "jsdoctags": [
+                        {
+                            "name": "val",
+                            "type": "BillingPeriod",
+                            "deprecated": false,
+                            "deprecationMessage": "",
+                            "tagName": {
+                                "text": "param"
+                            }
+                        }
+                    ]
+                }
+            ],
+            "deprecated": false,
+            "deprecationMessage": "",
+            "hostBindings": [],
+            "hostListeners": [],
+            "standalone": false,
+            "imports": [
+                {
+                    "name": "CommonModule",
+                    "type": "module"
+                },
+                {
+                    "name": "NzButtonModule",
+                    "type": "module"
+                },
+                {
+                    "name": "NzTagModule",
+                    "type": "module"
+                },
+                {
+                    "name": "NzIconModule",
+                    "type": "module"
+                },
+                {
+                    "name": "NzRadioModule",
+                    "type": "module"
+                },
+                {
+                    "name": "FormsModule",
+                    "type": "module"
+                },
+                {
+                    "name": "NzDividerModule",
+                    "type": "module"
+                },
+                {
+                    "name": "FormsModule",
+                    "type": "module"
+                }
+            ],
+            "description": "",
+            "rawdescription": "\n",
+            "type": "component",
+            "sourceCode": "import {\r\n  Component,\r\n  EventEmitter,\r\n  Input,\r\n  Output,\r\n  computed,\r\n  signal,\r\n} from '@angular/core';\r\nimport { CommonModule } from '@angular/common';\r\nimport { NzButtonModule } from 'ng-zorro-antd/button';\r\nimport { NzTagModule } from 'ng-zorro-antd/tag';\r\nimport { NzIconModule } from 'ng-zorro-antd/icon';\r\nimport { NzRadioModule } from 'ng-zorro-antd/radio';\r\nimport { FormsModule } from '@angular/forms';\r\nimport { NzDividerModule } from 'ng-zorro-antd/divider';\r\n\r\nexport type BillingPeriod = 'monthly' | 'annual';\r\n\r\n@Component({\r\n  selector: 'app-subscription-card',\r\n  imports: [\r\n    CommonModule,\r\n    NzButtonModule,\r\n    NzTagModule,\r\n    NzIconModule,\r\n    NzRadioModule,\r\n    FormsModule,\r\n    NzDividerModule,FormsModule\r\n  ],\r\n  templateUrl: './subscription-card.html',\r\n  styleUrl: './subscription-card.css',\r\n})\r\nexport class SubscriptionCard {\r\n  @Input() title = '';\r\n  @Input() subtitle = '';\r\n  @Input() recommended = false;\r\n  @Input() showPrice = true; // New input to control price display\r\n\r\n  @Input() showBillingToggle = false;\r\n  @Input() price: string | null = null; // e.g., 'XXXX'\r\n  @Input() billing: BillingPeriod = 'monthly';\r\n  @Output() billingChange = new EventEmitter<BillingPeriod>();\r\n\r\n  @Input() features: string[] = [];\r\n  @Input() ctaText = 'Choose plan';\r\n  @Input() ctaDisabled = false;\r\n  @Output() select = new EventEmitter<void>();\r\n\r\n  periodLabel = computed(() => (this.billing === 'annual' ? 'year' : 'month'));\r\n\r\n  onBillingChange(val: BillingPeriod) {\r\n    this.billing = val;\r\n    this.billingChange.emit(val);\r\n  }\r\n}",
+            "styleUrl": "./subscription-card.css",
+            "assetsDirs": [],
+            "styleUrlsData": "",
+            "stylesData": "",
+            "extends": [],
+            "templateData": "<div\r\n  class=\"rounded-xl border-[#D9D9D9] bg-white shadow-sm hover:shadow transition-shadow duration-200 flex flex-col min-h-[442px] max-w-[300px] min-w-[300px]\"\r\n  [class.border-blue-500]=\"recommended\"\r\n>\r\n  <!-- Header -->\r\n  <div class=\"p-6 pb-1\">\r\n    <div class=\"flex items-start gap-2\">\r\n      <h3 class=\"text-2xl font-semibold leading-tight capitalize\">\r\n        {{ title }}\r\n      </h3>\r\n      @if (recommended) {\r\n        <nz-tag nzColor=\"blue\" class=\"mt-1\">Recommended</nz-tag>\r\n      }\r\n    </div>\r\n    <p class=\"text-gray-500 mt-2\">{{ subtitle }}</p>\r\n  </div>\r\n\r\n  <!-- Billing toggle -->\r\n  @if (showBillingToggle) {\r\n    <div class=\"px-6\">\r\n      <label class=\"sr-only\">Billing period</label>\r\n      <nz-radio-group\r\n        [ngModel]=\"billing\"\r\n        (ngModelChange)=\"onBillingChange($event)\"\r\n      >\r\n        <label nz-radio-button [nzValue]=\"'monthly'\">Monthly</label>\r\n        <label nz-radio-button [nzValue]=\"'annual'\">\r\n          Annual ( save 25 % )\r\n        </label>\r\n      </nz-radio-group>\r\n    </div>\r\n  }\r\n\r\n  <!-- Price or Billing Info -->\r\n  @if (showBillingToggle) {\r\n    <div class=\"px-6 pt-3\">\r\n      @if (showPrice) {\r\n        <!-- Show price for prepaid plans -->\r\n        <div class=\"text-gray-800\">\r\n          <span class=\"text-base align-middle px-[4px]\">₹</span>\r\n          <span class=\"text-sm font-semibold align-middle\">{{ price }}</span>\r\n          <span class=\"ml-1 text-[11px] text-gray-500\">/ {{ periodLabel() }}</span>\r\n        </div>\r\n      } @else {\r\n        <!-- Show billing info for postpaid plans -->\r\n        <div class=\"text-gray-800 text-sm font-semibold\">\r\n          {{ billing === 'annual' ? 'Billed annually' : 'Billed monthly' }}\r\n        </div>\r\n      }\r\n    </div>\r\n  }\r\n\r\n  <!-- Divider -->\r\n  <nz-divider></nz-divider>\r\n\r\n  <!-- Features -->\r\n  @if (features.length) {\r\n    <ul class=\"px-6 flex-1 space-y-2\">\r\n      @for (f of features; track f) {\r\n        <li class=\"flex items-start gap-3 text-gray-700\">\r\n          <span\r\n            nz-icon\r\n            nzType=\"check\"\r\n            nzTheme=\"outline\"\r\n            class=\"text-green-600 mt-1\"\r\n          ></span>\r\n          <span>{{ f }}</span>\r\n        </li>\r\n      }\r\n    </ul>\r\n  }\r\n\r\n  <!-- CTA -->\r\n  <div class=\"px-6 py-5\">\r\n    <button\r\n      nz-button\r\n      [nzType]=\"ctaDisabled ? 'default' : 'primary'\"\r\n      class=\"w-full\"\r\n      [disabled]=\"ctaDisabled\"\r\n      (click)=\"select.emit()\"\r\n    >\r\n      {{ ctaText }}\r\n    </button>\r\n  </div>\r\n</div>"
+        },
+        {
+            "name": "SubscriptionsPricing",
+            "id": "component-SubscriptionsPricing-05bb6ac200798e33afdbdba0cc7c161aaeab5e99fd12151b42b8f732d3852f29c5d3a2a745b104f0c9e671bc92e7fbea075016268e013194321304f68c10e2f3",
+            "file": "src/app/components/subscriptions/subscriptions-pricing/subscriptions-pricing.ts",
+            "encapsulation": [],
+            "entryComponents": [],
+            "inputs": [],
+            "outputs": [],
+            "providers": [],
+            "selector": "app-subscriptions-pricing",
+            "styleUrls": [],
+            "styles": [],
+            "templateUrl": [
+                "./subscriptions-pricing.html"
+            ],
+            "viewProviders": [],
+            "hostDirectives": [],
+            "inputsClass": [],
+            "outputsClass": [],
+            "propertiesClass": [
+                {
+                    "name": "loading",
+                    "defaultValue": "signal(false)",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "",
+                    "indexKey": "",
+                    "optional": false,
+                    "description": "",
+                    "line": 19
+                },
+                {
+                    "name": "paygBilling",
+                    "defaultValue": "signal<BillingPeriod>('monthly')",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "",
+                    "indexKey": "",
+                    "optional": false,
+                    "description": "",
+                    "line": 25
+                },
+                {
+                    "name": "paygFeatures",
+                    "defaultValue": "[\r\n    'benefit description',\r\n    'benefit description',\r\n    'benefit description',\r\n    'benefit description',\r\n    'benefit description',\r\n  ]",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "[]",
+                    "indexKey": "",
+                    "optional": false,
+                    "description": "",
+                    "line": 37
+                },
+                {
+                    "name": "proBilling",
+                    "defaultValue": "signal<BillingPeriod>('monthly')",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "",
+                    "indexKey": "",
+                    "optional": false,
+                    "description": "",
+                    "line": 24
+                },
+                {
+                    "name": "proFeatures",
+                    "defaultValue": "[\r\n    'benefit description',\r\n    'benefit description',\r\n    'benefit description',\r\n    'benefit description',\r\n    'benefit description',\r\n  ]",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "[]",
+                    "indexKey": "",
+                    "optional": false,
+                    "description": "",
+                    "line": 29
+                }
+            ],
+            "methodsClass": [
+                {
+                    "name": "onSelect",
+                    "args": [
+                        {
+                            "name": "plan",
+                            "type": "\"free\" | \"pro\" | \"payg\"",
+                            "deprecated": false,
+                            "deprecationMessage": ""
+                        }
+                    ],
+                    "optional": false,
+                    "returnType": "void",
+                    "typeParameters": [],
+                    "line": 45,
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "jsdoctags": [
+                        {
+                            "name": "plan",
+                            "type": "\"free\" | \"pro\" | \"payg\"",
+                            "deprecated": false,
+                            "deprecationMessage": "",
+                            "tagName": {
+                                "text": "param"
+                            }
+                        }
+                    ]
+                }
+            ],
+            "deprecated": false,
+            "deprecationMessage": "",
+            "hostBindings": [],
+            "hostListeners": [],
+            "standalone": false,
+            "imports": [
+                {
+                    "name": "CommonModule",
+                    "type": "module"
+                },
+                {
+                    "name": "SubscriptionCard"
+                },
+                {
+                    "name": "Loader"
+                }
+            ],
+            "description": "",
+            "rawdescription": "\n",
+            "type": "component",
+            "sourceCode": "import { Component, signal } from '@angular/core';\r\nimport { CommonModule } from '@angular/common';\r\nimport {\r\n  SubscriptionCard,\r\n  BillingPeriod,\r\n} from '../../../shared/components/subscription-card/subscription-card';\r\nimport { NzNotificationService } from 'ng-zorro-antd/notification';\r\nimport { Router } from '@angular/router'; \r\n\r\nimport { Loader } from '../../../shared/components/modal/loader/loader';\r\n\r\n@Component({\r\n  selector: 'app-subscriptions-pricing',\r\n  imports: [CommonModule, SubscriptionCard, Loader],\r\n  templateUrl: './subscriptions-pricing.html',\r\n  styleUrl: './subscriptions-pricing.css',\r\n})\r\nexport class SubscriptionsPricing {\r\n  loading = signal(false);\r\n\r\n   constructor(private router: Router,private notify: NzNotificationService) {} \r\n\r\n\r\n  proBilling = signal<BillingPeriod>('monthly');\r\n  paygBilling = signal<BillingPeriod>('monthly');\r\n\r\n\r\n\r\n  proFeatures = [\r\n    'benefit description',\r\n    'benefit description',\r\n    'benefit description',\r\n    'benefit description',\r\n    'benefit description',\r\n  ];\r\n\r\n  paygFeatures = [\r\n    'benefit description',\r\n    'benefit description',\r\n    'benefit description',\r\n    'benefit description',\r\n    'benefit description',\r\n  ];\r\n\r\n  onSelect(plan: 'free' | 'pro' | 'payg') {\r\n    // handle plan selection here (navigate, open checkout, call API, etc.)\r\n    // navigate to addon page\r\n    this.loading.set(true); // show loader\r\n  setTimeout(() => {\r\n    this.router.navigate(['/auth/select-addons']).then(() => {\r\n      setTimeout(() => {\r\n        this.loading.set(false);\r\n        this.notify.success(`You selected ${plan} plan`, 'Plan selection successful');\r\n      }, 1500);\r\n    });\r\n  }, 1000);\r\n  }\r\n}\r\n",
+            "styleUrl": "./subscriptions-pricing.css",
+            "assetsDirs": [],
+            "styleUrlsData": "",
+            "stylesData": "",
+            "constructorObj": {
+                "name": "constructor",
+                "description": "",
+                "deprecated": false,
+                "deprecationMessage": "",
+                "args": [
+                    {
+                        "name": "router",
+                        "type": "Router",
+                        "deprecated": false,
+                        "deprecationMessage": ""
+                    },
+                    {
+                        "name": "notify",
+                        "type": "NzNotificationService",
+                        "deprecated": false,
+                        "deprecationMessage": ""
+                    }
+                ],
+                "line": 19,
+                "jsdoctags": [
+                    {
+                        "name": "router",
+                        "type": "Router",
+                        "deprecated": false,
+                        "deprecationMessage": "",
+                        "tagName": {
+                            "text": "param"
+                        }
+                    },
+                    {
+                        "name": "notify",
+                        "type": "NzNotificationService",
+                        "deprecated": false,
+                        "deprecationMessage": "",
+                        "tagName": {
+                            "text": "param"
+                        }
+                    }
+                ]
+            },
+            "extends": [],
+            "templateData": "<!-- Loader Overlay -->\r\n@if (loading()) {\r\n  <app-loader></app-loader>\r\n}\r\n\r\n<div class=\"min-h-screen bg-[#F5f5f5] \">\r\n    <div class=\"max-w-6xl mx-auto px-5 py-8 md:py-10\">\r\n      <h1 class=\"text-[20px] md:text-2xl font-medium\">Available Subscription Plans</h1>\r\n      <p class=\"text-gray-600 mt-2 text-sm\">\r\n        Available plan as your requirement choosen from available plan\r\n      </p>\r\n\r\n      <div class=\"grid grid-cols-1 md:grid-cols-3 gap-1 mt-8\">\r\n        <!-- Free -->\r\n        <app-subscription-card\r\n          title=\"Free\"\r\n          [subtitle]=\"'Best for anyone who want to simple use'\"\r\n          [showBillingToggle]=\"false\"\r\n          [price]=\"null\"\r\n          [features]=\"['benefit description', 'benefit description']\"\r\n          [ctaText]=\"'Current plan'\"\r\n          [ctaDisabled]=\"true\"\r\n          (select)=\"onSelect('free')\"\r\n        ></app-subscription-card>\r\n\r\n        <!-- Pro (Recommended) - Prepaid with price -->\r\n        <app-subscription-card\r\n          title=\"pro\"\r\n          [subtitle]=\"'Description about pro plan'\"\r\n          [recommended]=\"true\"\r\n          [showBillingToggle]=\"true\"\r\n          [showPrice]=\"true\" \r\n          [billing]=\"proBilling()\"\r\n          [price]=\"proBilling() === 'monthly' ? 'XXXX' : 'XXXX*12'\"\r\n          [features]=\"proFeatures\"\r\n          [ctaText]=\"'Choose plan'\"\r\n          (billingChange)=\"proBilling.set($event)\"\r\n          (select)=\"onSelect('pro')\"\r\n        ></app-subscription-card>\r\n\r\n        <!-- Pay as you go - Postpaid without price -->\r\n        <app-subscription-card\r\n          title=\"Pay as you go\"\r\n          [subtitle]=\"'Description about pro plan'\"\r\n          [showBillingToggle]=\"true\"\r\n          [showPrice]=\"false\" \r\n          [billing]=\"paygBilling()\"\r\n          [price]=\"null\"  \r\n          [features]=\"paygFeatures\"\r\n          [ctaText]=\"'Choose plan'\"\r\n          (billingChange)=\"paygBilling.set($event)\"\r\n          (select)=\"onSelect('payg')\"\r\n        ></app-subscription-card>\r\n      </div>\r\n    </div>\r\n  </div>"
+        }
+    ],
+    "modules": [],
+    "miscellaneous": {
+        "variables": [
+            {
+                "name": "appConfig",
+                "ctype": "miscellaneous",
+                "subtype": "variable",
+                "file": "src/app/app.config.ts",
+                "deprecated": false,
+                "deprecationMessage": "",
+                "type": "ApplicationConfig",
+                "defaultValue": "{\r\n  providers: [\r\n    provideBrowserGlobalErrorListeners(),\r\n    provideZonelessChangeDetection(),\r\n    provideRouter(routes), provideClientHydration(withEventReplay()),\r\n    provideAnimationsAsync(),\r\n    provideHttpClient()\r\n  ]\r\n}"
+            },
+            {
+                "name": "authGuard",
+                "ctype": "miscellaneous",
+                "subtype": "variable",
+                "file": "src/app/components/auth/auth.guard.ts",
+                "deprecated": false,
+                "deprecationMessage": "",
+                "type": "CanActivateFn",
+                "defaultValue": "() => {\r\n  const auth = inject(Auth);\r\n  const router = inject(Router);\r\n  if (auth.isLoggedIn()) return true;\r\n  router.navigateByUrl('/dashboard');\r\n  return false;\r\n}"
+            },
+            {
+                "name": "icons",
+                "ctype": "miscellaneous",
+                "subtype": "variable",
+                "file": "src/app/shared/components/sidenav/icons-provider.ts",
+                "deprecated": false,
+                "deprecationMessage": "",
+                "type": "[]",
+                "defaultValue": "[\r\n  MenuFoldOutline,\r\n  MenuUnfoldOutline,\r\n  DashboardOutline,\r\n  FormOutline,\r\n  SettingOutline,\r\n  PieChartOutline,\r\n  ApartmentOutline,\r\n  CreditCardOutline,\r\n  QuestionCircleOutline,\r\n  DollarOutline,\r\n  EyeOutline,\r\n  EyeInvisibleOutline,\r\n  MailOutline,\r\n  ArrowLeftOutline,\r\n  DeleteFill,\r\n  DeleteOutline,\r\n  PlusOutline,\r\n  PlusSquareFill,\r\n  DiffOutline\r\n]"
+            }
+        ],
+        "functions": [],
+        "typealiases": [
+            {
+                "name": "BillingPeriod",
+                "ctype": "miscellaneous",
+                "subtype": "typealias",
+                "rawtype": "\"monthly\" | \"annual\"",
+                "file": "src/app/shared/components/subscription-card/subscription-card.ts",
+                "deprecated": false,
+                "deprecationMessage": "",
+                "description": "",
+                "kind": 192
+            },
+            {
+                "name": "Period",
+                "ctype": "miscellaneous",
+                "subtype": "typealias",
+                "rawtype": "\"monthly\" | \"annual\"",
+                "file": "src/app/components/subscriptions/select-addon/select-addon.ts",
+                "deprecated": false,
+                "deprecationMessage": "",
+                "description": "",
+                "kind": 192
+            }
+        ],
+        "enumerations": [
+            {
+                "name": "AccountType",
+                "childs": [
+                    {
+                        "name": "Individual",
+                        "deprecated": false,
+                        "deprecationMessage": "",
+                        "value": "individual"
+                    },
+                    {
+                        "name": "Organization",
+                        "deprecated": false,
+                        "deprecationMessage": "",
+                        "value": "organization"
+                    }
+                ],
+                "ctype": "miscellaneous",
+                "subtype": "enum",
+                "deprecated": false,
+                "deprecationMessage": "",
+                "description": "",
+                "file": "src/app/models/enums/account-type.enum.ts"
+            },
+            {
+                "name": "UserType",
+                "childs": [
+                    {
+                        "name": "organization",
+                        "deprecated": false,
+                        "deprecationMessage": "",
+                        "value": "organization"
+                    },
+                    {
+                        "name": "Regular",
+                        "deprecated": false,
+                        "deprecationMessage": "",
+                        "value": "Regular"
+                    }
+                ],
+                "ctype": "miscellaneous",
+                "subtype": "enum",
+                "deprecated": false,
+                "deprecationMessage": "",
+                "description": "",
+                "file": "src/app/models/enums/user-type.enum.ts"
+            }
+        ],
+        "groupedVariables": {
+            "src/app/app.config.ts": [
+                {
+                    "name": "appConfig",
+                    "ctype": "miscellaneous",
+                    "subtype": "variable",
+                    "file": "src/app/app.config.ts",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "ApplicationConfig",
+                    "defaultValue": "{\r\n  providers: [\r\n    provideBrowserGlobalErrorListeners(),\r\n    provideZonelessChangeDetection(),\r\n    provideRouter(routes), provideClientHydration(withEventReplay()),\r\n    provideAnimationsAsync(),\r\n    provideHttpClient()\r\n  ]\r\n}"
+                }
+            ],
+            "src/app/components/auth/auth.guard.ts": [
+                {
+                    "name": "authGuard",
+                    "ctype": "miscellaneous",
+                    "subtype": "variable",
+                    "file": "src/app/components/auth/auth.guard.ts",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "CanActivateFn",
+                    "defaultValue": "() => {\r\n  const auth = inject(Auth);\r\n  const router = inject(Router);\r\n  if (auth.isLoggedIn()) return true;\r\n  router.navigateByUrl('/dashboard');\r\n  return false;\r\n}"
+                }
+            ],
+            "src/app/shared/components/sidenav/icons-provider.ts": [
+                {
+                    "name": "icons",
+                    "ctype": "miscellaneous",
+                    "subtype": "variable",
+                    "file": "src/app/shared/components/sidenav/icons-provider.ts",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "[]",
+                    "defaultValue": "[\r\n  MenuFoldOutline,\r\n  MenuUnfoldOutline,\r\n  DashboardOutline,\r\n  FormOutline,\r\n  SettingOutline,\r\n  PieChartOutline,\r\n  ApartmentOutline,\r\n  CreditCardOutline,\r\n  QuestionCircleOutline,\r\n  DollarOutline,\r\n  EyeOutline,\r\n  EyeInvisibleOutline,\r\n  MailOutline,\r\n  ArrowLeftOutline,\r\n  DeleteFill,\r\n  DeleteOutline,\r\n  PlusOutline,\r\n  PlusSquareFill,\r\n  DiffOutline\r\n]"
+                }
+            ]
+        },
+        "groupedFunctions": {},
+        "groupedEnumerations": {
+            "src/app/models/enums/account-type.enum.ts": [
+                {
+                    "name": "AccountType",
+                    "childs": [
+                        {
+                            "name": "Individual",
+                            "deprecated": false,
+                            "deprecationMessage": "",
+                            "value": "individual"
+                        },
+                        {
+                            "name": "Organization",
+                            "deprecated": false,
+                            "deprecationMessage": "",
+                            "value": "organization"
+                        }
+                    ],
+                    "ctype": "miscellaneous",
+                    "subtype": "enum",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "description": "",
+                    "file": "src/app/models/enums/account-type.enum.ts"
+                }
+            ],
+            "src/app/models/enums/user-type.enum.ts": [
+                {
+                    "name": "UserType",
+                    "childs": [
+                        {
+                            "name": "organization",
+                            "deprecated": false,
+                            "deprecationMessage": "",
+                            "value": "organization"
+                        },
+                        {
+                            "name": "Regular",
+                            "deprecated": false,
+                            "deprecationMessage": "",
+                            "value": "Regular"
+                        }
+                    ],
+                    "ctype": "miscellaneous",
+                    "subtype": "enum",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "description": "",
+                    "file": "src/app/models/enums/user-type.enum.ts"
+                }
+            ]
+        },
+        "groupedTypeAliases": {
+            "src/app/shared/components/subscription-card/subscription-card.ts": [
+                {
+                    "name": "BillingPeriod",
+                    "ctype": "miscellaneous",
+                    "subtype": "typealias",
+                    "rawtype": "\"monthly\" | \"annual\"",
+                    "file": "src/app/shared/components/subscription-card/subscription-card.ts",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "description": "",
+                    "kind": 192
+                }
+            ],
+            "src/app/components/subscriptions/select-addon/select-addon.ts": [
+                {
+                    "name": "Period",
+                    "ctype": "miscellaneous",
+                    "subtype": "typealias",
+                    "rawtype": "\"monthly\" | \"annual\"",
+                    "file": "src/app/components/subscriptions/select-addon/select-addon.ts",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "description": "",
+                    "kind": 192
+                }
+            ]
+        }
+    },
+    "routes": [],
+    "coverage": {
+        "count": 1,
+        "status": "low",
+        "files": [
+            {
+                "filePath": "src/app/app.config.ts",
+                "type": "variable",
+                "linktype": "miscellaneous",
+                "linksubtype": "variable",
+                "name": "appConfig",
+                "coveragePercent": 0,
+                "coverageCount": "0/1",
+                "status": "low"
+            },
+            {
+                "filePath": "src/app/app.ts",
+                "type": "component",
+                "linktype": "component",
+                "name": "App",
+                "coveragePercent": 0,
+                "coverageCount": "0/2",
+                "status": "low"
+            },
+            {
+                "filePath": "src/app/components/auth/auth-dashboard/auth-dashboard.ts",
+                "type": "component",
+                "linktype": "component",
+                "name": "AuthDashboard",
+                "coveragePercent": 0,
+                "coverageCount": "0/3",
+                "status": "low"
+            },
+            {
+                "filePath": "src/app/components/auth/auth-shell/auth-shell.ts",
+                "type": "component",
+                "linktype": "component",
+                "name": "AuthShell",
+                "coveragePercent": 0,
+                "coverageCount": "0/2",
+                "status": "low"
+            },
+            {
+                "filePath": "src/app/components/auth/auth.guard.ts",
+                "type": "variable",
+                "linktype": "miscellaneous",
+                "linksubtype": "variable",
+                "name": "authGuard",
+                "coveragePercent": 0,
+                "coverageCount": "0/1",
+                "status": "low"
+            },
+            {
+                "filePath": "src/app/components/auth/login/login.ts",
+                "type": "component",
+                "linktype": "component",
+                "name": "Login",
+                "coveragePercent": 0,
+                "coverageCount": "0/12",
+                "status": "low"
+            },
+            {
+                "filePath": "src/app/components/auth/register/register.ts",
+                "type": "component",
+                "linktype": "component",
+                "name": "Register",
+                "coveragePercent": 0,
+                "coverageCount": "0/10",
+                "status": "low"
+            },
+            {
+                "filePath": "src/app/components/organization/organizations/organizations.ts",
+                "type": "component",
+                "linktype": "component",
+                "name": "Organizations",
+                "coveragePercent": 0,
+                "coverageCount": "0/1",
+                "status": "low"
+            },
+            {
+                "filePath": "src/app/components/subscriptions/select-addon/select-addon.ts",
+                "type": "component",
+                "linktype": "component",
+                "name": "SelectAddon",
+                "coveragePercent": 0,
+                "coverageCount": "0/22",
+                "status": "low"
+            },
+            {
+                "filePath": "src/app/components/subscriptions/select-addon/select-addon.ts",
+                "type": "interface",
+                "linktype": "interface",
+                "name": "Addon",
+                "coveragePercent": 0,
+                "coverageCount": "0/6",
+                "status": "low"
+            },
+            {
+                "filePath": "src/app/components/subscriptions/select-addon/select-addon.ts",
+                "type": "interface",
+                "linktype": "interface",
+                "name": "ChosenAddon",
+                "coveragePercent": 0,
+                "coverageCount": "0/3",
+                "status": "low"
+            },
+            {
+                "filePath": "src/app/components/subscriptions/select-addon/select-addon.ts",
+                "type": "type alias",
+                "linktype": "miscellaneous",
+                "linksubtype": "typealias",
+                "name": "Period",
+                "coveragePercent": 0,
+                "coverageCount": "0/1",
+                "status": "low"
+            },
+            {
+                "filePath": "src/app/components/subscriptions/subscriptions-pricing/subscriptions-pricing.ts",
+                "type": "component",
+                "linktype": "component",
+                "name": "SubscriptionsPricing",
+                "coveragePercent": 0,
+                "coverageCount": "0/8",
+                "status": "low"
+            },
+            {
+                "filePath": "src/app/models/interfaces/user.interface.ts",
+                "type": "interface",
+                "linktype": "interface",
+                "name": "ForgotPasswordRequest",
+                "coveragePercent": 0,
+                "coverageCount": "0/2",
+                "status": "low"
+            },
+            {
+                "filePath": "src/app/models/interfaces/user.interface.ts",
+                "type": "interface",
+                "linktype": "interface",
+                "name": "LoginRequest",
+                "coveragePercent": 0,
+                "coverageCount": "0/3",
+                "status": "low"
+            },
+            {
+                "filePath": "src/app/models/interfaces/user.interface.ts",
+                "type": "interface",
+                "linktype": "interface",
+                "name": "RegisterRequest",
+                "coveragePercent": 0,
+                "coverageCount": "0/10",
+                "status": "low"
+            },
+            {
+                "filePath": "src/app/services/auth/auth.ts",
+                "type": "injectable",
+                "linktype": "injectable",
+                "name": "Auth",
+                "coveragePercent": 46,
+                "coverageCount": "6/13",
+                "status": "medium"
+            },
+            {
+                "filePath": "src/app/services/auth/auth.ts",
+                "type": "interface",
+                "linktype": "interface",
+                "name": "MockUser",
+                "coveragePercent": 0,
+                "coverageCount": "0/6",
+                "status": "low"
+            },
+            {
+                "filePath": "src/app/shared/components/modal/dialog/input-dialog/input-dialog.ts",
+                "type": "component",
+                "linktype": "component",
+                "name": "InputDialog",
+                "coveragePercent": 0,
+                "coverageCount": "0/14",
+                "status": "low"
+            },
+            {
+                "filePath": "src/app/shared/components/modal/loader/loader.ts",
+                "type": "component",
+                "linktype": "component",
+                "name": "Loader",
+                "coveragePercent": 0,
+                "coverageCount": "0/1",
+                "status": "low"
+            },
+            {
+                "filePath": "src/app/shared/components/results/email-pending/email-pending.ts",
+                "type": "component",
+                "linktype": "component",
+                "name": "EmailPending",
+                "coveragePercent": 0,
+                "coverageCount": "0/3",
+                "status": "low"
+            },
+            {
+                "filePath": "src/app/shared/components/sidenav/icons-provider.ts",
+                "type": "variable",
+                "linktype": "miscellaneous",
+                "linksubtype": "variable",
+                "name": "icons",
+                "coveragePercent": 0,
+                "coverageCount": "0/1",
+                "status": "low"
+            },
+            {
+                "filePath": "src/app/shared/components/sidenav/sidenav.ts",
+                "type": "component",
+                "linktype": "component",
+                "name": "Sidenav",
+                "coveragePercent": 0,
+                "coverageCount": "0/4",
+                "status": "low"
+            },
+            {
+                "filePath": "src/app/shared/components/subscription-card/subscription-card.ts",
+                "type": "component",
+                "linktype": "component",
+                "name": "SubscriptionCard",
+                "coveragePercent": 0,
+                "coverageCount": "0/15",
+                "status": "low"
+            },
+            {
+                "filePath": "src/app/shared/components/subscription-card/subscription-card.ts",
+                "type": "type alias",
+                "linktype": "miscellaneous",
+                "linksubtype": "typealias",
+                "name": "BillingPeriod",
+                "coveragePercent": 0,
+                "coverageCount": "0/1",
+                "status": "low"
+            }
+        ]
+    }
+}

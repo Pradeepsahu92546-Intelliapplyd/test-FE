@@ -1,0 +1,91 @@
+<div
+  class="user-header"
+  nz-dropdown
+  [nzDropdownMenu]="userMenu"
+  nzTrigger="click"
+  [nz-tooltip]="isCollapsed ? name : ''"
+  nzTooltipPlacement="right"
+>
+  <nz-avatar
+    nzSize="large"
+    [nzSrc]="profileImg"
+    (nzError)="onAvatarError()"
+    style="
+      background-color: #6c63ff;
+      color: #fff;
+      font-size: 12px;
+      flex-shrink: 0;
+    "></nz-avatar>
+  @if (!isCollapsed) {
+  <ng-container>
+    <div class="user-info">
+      <span class="user-name" data-testid="header-user-name">
+        {{ name }}
+        <span nz-icon nzType="down" nzTheme="outline" class="arrow-icon"></span>
+      </span>
+      <span class="user-email" data-testid="header-user-email">{{ email }}</span>
+    </div>
+  </ng-container>
+  }
+</div>
+
+<nz-dropdown-menu #userMenu="nzDropdownMenu">
+  <div class="user-dropdown-menu">
+    <div class="user-dropdown-header">
+      <nz-avatar
+        nzSize="large"
+        [nzSrc]="profileImg"
+        (nzError)="onAvatarError()"
+        style="margin-bottom: 8px"
+      ></nz-avatar>
+      <div>
+        <div class="user-dropdown-name">
+          <span class="user-name" data-testid="dropdown-user-name">{{ name }}</span>
+          <span nz-icon nzType="edit" (click)="navigateToProfile()" nzTheme="outline"
+            style="font-size: 12px; color: #888"></span>
+        </div>
+        <div class="user-email" data-testid="dropdown-user-email">{{ email }}</div>
+      </div>
+    </div>
+
+    <ul nz-menu class="dropdown-items">
+      <li nz-menu-item data-testid="menu-item-account" (click)="navigateToAccount()">
+        <span nz-icon nzType="user" nzTheme="outline"></span>
+        <span class="flex-1 ml-2 !text-[12px] !font-normal !text-black/85">
+          Account
+        </span>
+        <span nz-icon nzType="right" nzTheme="outline" class="!ml-17 !text-[10px] !text-gray-500"></span>
+      </li>
+      <li nz-menu-item data-testid="menu-item-manage" (click)="navigateToManage()">
+        <span nz-icon nzType="tool" nzTheme="outline"></span>
+        <span class="flex-1 ml-2 !text-[12px] !font-normal !text-black/85">
+          Manage
+        </span>
+        <span nz-icon nzType="right" nzTheme="outline" class="!ml-17 !text-[10px] !text-gray-500"></span>
+      </li>
+      <li nz-menu-item data-testid="menu-item-invite" (click)="navigateToInvite()">
+        <span nz-icon nzType="user-add" nzTheme="outline"></span>
+        <span class="flex-1 ml-2 !text-[12px] !font-normal !text-black/85">
+          Invite member
+        </span>
+        <span nz-icon nzType="right" nzTheme="outline" class="!ml-[34px] !text-[10px] !text-gray-500"></span>
+      </li>
+      <li nz-menu-item data-testid="menu-item-theme">
+        <span nz-icon nzType="layout" nzTheme="outline"></span>
+        <span class="flex-1 ml-2 !text-[12px] !font-normal !text-black/85">
+          Customize Theme
+        </span>
+        <span nz-icon nzType="right" nzTheme="outline" class="!ml-[15px] !text-[10px] !text-gray-500"></span>
+      </li>
+
+      <li nz-menu-divider></li>
+      <li nz-menu-item class="" (click)="logout()">
+        <span nz-icon nzType="logout" nzTheme="outline"></span>
+        <span class="flex-1 ml-2 !text-[12px] !font-normal !text-black/85">
+          Log out
+        </span>
+        <span nz-icon nzType="right" nzTheme="outline" class="!ml-17 !text-[10px] !text-gray-500"></span>
+      </li>
+    </ul>
+  </div>
+</nz-dropdown-menu>

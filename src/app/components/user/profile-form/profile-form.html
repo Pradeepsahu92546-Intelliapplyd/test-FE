@@ -1,0 +1,104 @@
+<div class="container">
+    <div class="headings">
+        <h3>Profile Details</h3>
+        <p>Upadate Your Information</p>
+    </div>
+
+    <form nz-form [formGroup]="profileForm" class="flex flex-col justify-center gap-6" data-testid="profile-form">
+        <!-- Basic Information Section -->
+        <div class="p-2">
+            <div class="flex justify-between items-center self-stretch">
+                <div class="headings">
+                    <h3>Basic Information</h3>
+                </div>
+
+                @if (!isEditingBasic) {
+                <button nz-button nzType="primary" (click)="enableBasicEdit()" data-testid="edit-basic-button">
+                    Edit Basic Info
+                </button>
+                }
+            </div>
+
+            <div class="section-content">
+                <div class="form-row">
+                    <div class="form-field">
+                        <label>First Name</label>
+                        <input nz-input formControlName="firstName" placeholder="First Name" />
+                        @if (f['firstName'].touched && f['firstName'].errors?.['required']) {
+                        <span class="error">First Name is required</span>
+                        }
+                        @if (f['firstName'].touched && f['firstName'].errors?.['minlength']) {
+                        <span class="error">Minimum 4 characters required</span>
+                        }
+                    </div>
+
+                    <div class="form-field">
+                        <label>Last Name</label>
+                        <input nz-input formControlName="lastName" placeholder="Last Name" />
+                        @if (f['lastName'].touched && f['lastName'].errors?.['required']) {
+                        <span class="error">Last Name is required</span>
+                        }
+                        @if (f['lastName'].touched && f['lastName'].errors?.['minlength']) {
+                        <span class="error">Minimum 4 characters required</span>
+                        }
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-field">
+                        <label>Date of Birth</label>
+                        <input nz-input formControlName="dob" type="date" placeholder="Date of Birth" />
+                        @if (f['dob'].touched && f['dob'].errors?.['required']) {
+                        <span class="error">Date of birth is required</span>
+                        }
+                    </div>
+                </div>
+
+                <!-- Basic Info Action Buttons -->
+                @if (isEditingBasic) {
+                <div class="action-buttons">
+                    <button nz-button nzType="default" (click)="cancelBasicEdit()" data-testid="cancel-basic-button">
+                        Cancel
+                    </button>
+                    <button nz-button nzType="primary" (click)="saveBasicInfo()" [nzLoading]="isSavingBasic"
+                        data-testid="save-basic-button">
+                        Save Basic Info
+                    </button>
+                </div>
+                }
+            </div>
+        </div>
+
+        <!-- Contact Information Section -->
+        <div class="p-2">
+            <div class="flex justify-between items-center self-stretch">
+                <div class="headings">
+                    <h3>Contact Information</h3>
+                </div>
+                <span class="text-xs text-gray-500">Phone edit not available currently</span>
+            </div>
+
+            <div class="section-content">
+                <div class="form-row1">
+                    <div class="form-field">
+                        <label>Country Code</label>
+                        <input nz-input formControlName="countryCode" placeholder="Country Code" />
+                    </div>
+
+                    <div class="form-field">
+                        <label>Phone Number</label>
+                        <input nz-input formControlName="phone" type="tel" placeholder="Phone Number" />
+                        @if (f['phone'].touched && f['phone'].errors?.['required']) {
+                        <span class="error">Phone number is required</span>
+                        }
+                        @if (f['phone'].touched && f['phone'].errors?.['pattern']) {
+                        <span class="error">Phone must be 8–12 digits</span>
+                        }
+                    </div>
+                </div>
+
+                <!-- Phone edit is currently disabled while API is unavailable -->
+            </div>
+        </div>
+    </form>
+</div>

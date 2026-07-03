@@ -1,0 +1,23 @@
+
+.right {
+  width: 400px;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  margin: 8px 0;
+}
+
+.total {
+  font-weight: bold;
+  
+}
+
+.mt-2 {
+  margin-top: 16px;
+  width:100%;
+}
+.total-money{
+    color:"#18900FF"
+}

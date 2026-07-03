@@ -1,0 +1,159 @@
+<div class="billing-page">
+  <!-- Loading skeleton -->
+  @if (isLoading) {
+    <ng-container>
+      <div class="billing-block" *ngFor="let i of [1, 2]">
+        <nz-skeleton
+          [nzActive]="true"
+          [nzParagraph]="{ rows: 6 }"
+        ></nz-skeleton>
+      </div>
+    </ng-container>
+  }
+
+  <!-- Error -->
+  @if (!isLoading && error) {
+    <div class="error-state">
+      <span
+        nz-icon
+        nzType="exclamation-circle"
+        nzTheme="outline"
+        class="error-icon"
+      ></span>
+      <p>{{ error }}</p>
+    </div>
+  }
+
+  <!-- Billing blocks -->
+  @if (!isLoading && !error) {
+    <ng-container>
+      <div
+        class="billing-block"
+        *ngFor="let billing of billings; let last = last"
+      >
+        <!-- Section title -->
+        <div class="block-title">
+          <span class="label-upcoming">Upcoming Billing :</span>
+          <span class="label-plan">{{ billing.userSub }}</span>
+        </div>
+
+        <!-- Two-column card row -->
+        <div class="card-row">
+          <!-- LEFT: Billing Details -->
+          <div class="detail-card">
+            <table class="detail-table">
+              <tbody>
+                <tr>
+                  <td class="field-label">Billing Id</td>
+                  <td class="field-value">{{ billing.id | slice: 0 : 16 }}</td>
+                </tr>
+                <tr>
+                  <td class="field-label">User subscription</td>
+                  <td class="field-value">{{ billing.userSub }}</td>
+                </tr>
+                <tr>
+                  <td class="field-label">Subscription status</td>
+                  <td class="field-value">{{ getSubStatus(billing) }}</td>
+                </tr>
+                <tr>
+                  <td class="field-label">Bill date</td>
+                  <td class="field-value">
+                    {{ formatDate(billing.billDate) }}
+                  </td>
+                </tr>
+                <tr>
+                  <td class="field-label">Due date</td>
+                  <td class="field-value">
+                    {{ formatDate(billing.dueDate) }}
+                  </td>
+                </tr>
+                <tr>
+                  <td class="field-label">Next bill date</td>
+                  <td class="field-value">
+                    {{ formatDate(billing.nextBillDate) }}
+                  </td>
+                </tr>
+                <tr>
+                  <td class="field-label">Description</td>
+                  <td class="field-value">{{ billing.description ?? "–" }}</td>
+                </tr>
+                <tr>
+                  <td class="field-label">Payment Method</td>
+                  <td class="field-value">{{ billing.payMethod ?? "–" }}</td>
+                </tr>
+                <tr>
+                  <td class="field-label">Is_trial</td>
+                  <td class="field-value">
+                    {{ billing.isTrail ? "YES" : "NO" }}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- RIGHT: Address + Payment -->
+          <div class="right-col">
+            <!-- Billing Address card -->
+            <div class="info-card address-card">
+              <p class="card-section-label">Billing Address :</p>
+              <p class="address-text">{{ getBillingAddress(billing.address) }}</p>
+            </div>
+
+            <!-- Payment Status card -->
+            <div class="info-card payment-card">
+              <div class="payment-row">
+                <span class="pay-label">Payment Status</span>
+                <nz-tag
+                  [nzColor]="getStatusColor(billing.payStatus)"
+                  class="status-tag"
+                >
+                   {{ getStatusLabel(billing.payStatus) }}
+                </nz-tag>
+              </div>
+
+              <div class="payment-row">
+                <span class="pay-label">Next month Bill amount :</span>
+                <span class="amount-value">{{
+                   formatAmount(billing.billableAmount)
+                }}</span>
+              </div>
+
+              <div class="payment-row pay-action-row">
+                <span class="pay-label"><strong>Bill amount :</strong></span>
+                <button
+                  nz-button
+                  nzType="primary"
+                  class="pay-btn"
+                  [disabled]="billing.payStatus.toLowerCase() === 'paid'"
+                  (click)="onPay(billing)"
+                >
+                  {{
+                    billing.payStatus.toLowerCase() === "paid" ? "Paid" : "Pay"
+                  }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Divider between blocks (not after last) -->
+        @if (!last) {
+          <nz-divider></nz-divider>
+        }
+      </div>
+
+      <!-- Empty state -->
+      @if (billings.length === 0) {
+        <div class="empty-state">
+          <span
+            nz-icon
+            nzType="file-done"
+            nzTheme="outline"
+            class="empty-icon"
+          ></span>
+          <p>No billing records found.</p>
+        </div>
+      }
+    </ng-container>
+  }
+</div>

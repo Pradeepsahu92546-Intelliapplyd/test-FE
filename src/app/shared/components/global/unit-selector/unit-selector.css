@@ -1,0 +1,99 @@
+/*
+   UNITS SELECTOR */
+.units-selector {
+  padding: 8px 16px;
+}
+.unit-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+.unit-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #333;
+}
+
+/* Collapsed units avatar */
+.units-selector-collapsed {
+  display: flex;
+  justify-content: center;
+  padding: 8px 0;
+  cursor: pointer;
+}
+
+/*
+   SEARCH BOX */
+.search-box {
+  padding: 6px 12px;
+}
+
+::ng-deep .ant-input-affix-wrapper {
+  border-radius: 6px;
+  border-color: #e8e8e8;
+  background: #f7f7f7;
+}
+
+/*
+   ICON-ONLY ROW  (collapsed placeholders)*/
+.icon-only-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 8px 0;
+  cursor: pointer;
+}
+.icon-only-row:hover .collapsed-icon { color: #1677ff; }
+
+.collapsed-icon {
+  font-size: 16px;
+  color: #555;
+  transition: color 0.2s;
+}
+
+/*
+   TABS */
+.unit-tabs {
+  display: flex;
+  padding: 0 12px;
+  margin-bottom: 2px;
+}
+.tab-btn {
+  background: none;
+  border: none;
+  padding: 4px 8px;
+  font-size: 13px;
+  color: #888;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+.tab-btn.active {
+  color: #1677ff;
+  border-bottom-color: #1677ff;
+  font-weight: 600;
+}
+.tab-count { font-size: 11px; color: inherit; }
+
+.all-units-label ::ng-deep .ant-divider-inner-text {
+  font-size: 11px !important;
+  padding: 2px 16px 6px !important;
+}
+
+/*
+   TREE */
+.unit-tree {
+  padding: 0 8px;
+  overflow-y: auto;
+  max-height: 180px;
+}
+::ng-deep .unit-tree .ant-tree { font-size: 13px; }
+::ng-deep .unit-tree .ant-tree .ant-tree-node-content-wrapper { padding: 2px 4px; }
+
+::ng-deep .ant-tabs-nav {
+  margin-bottom: 0 !important; 
+}

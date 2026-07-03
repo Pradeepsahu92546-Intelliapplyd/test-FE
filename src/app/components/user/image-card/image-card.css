@@ -1,0 +1,50 @@
+#image-card {
+  width: 100%;
+  max-width: 380px;
+  padding: 1rem;
+  margin: 0 auto;
+}
+
+#profile-section {
+  margin-bottom: 1rem;
+}
+
+#profile-img {
+  width: 112px;
+  height: 112px;
+}
+
+#user-info {
+  text-align: center;
+}
+
+@media (max-width: 768px) {
+  #image-card {
+    max-width: 100%;
+    padding: 0.75rem;
+  }
+
+  #profile-img {
+    width: 96px;
+    height: 96px;
+  }
+
+  #user-name {
+    font-size: 14px;
+  }
+
+  #user-email {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  #image-card {
+    padding: 0.5rem;
+  }
+
+  #profile-img {
+    width: 80px;
+    height: 80px;
+  }
+}

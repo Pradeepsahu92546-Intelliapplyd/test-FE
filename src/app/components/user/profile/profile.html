@@ -1,0 +1,45 @@
+<div class="profile-container !px-[16px] !py-[16px]">
+    <!-- Sidebar -->
+
+    <!-- Main Content -->
+    <div class="main-content !px-[47px] !py-[15px]">
+        <nz-card [nzBordered]="false" class="!rounded-[15px]">
+            <nz-tabs nzType="line" class="tabs">
+
+                <!-- Profile Details -->
+                <nz-tab nzTitle="Profile Details">
+                    
+                    <div class="tab-content flex flex-col md:flex-row gap-6 w-full">
+
+                        
+                        <div class="sidebar shrink-0">
+                            <app-image-card></app-image-card>
+                        </div>
+
+                    
+                        <div class="flex-1 w-full">
+                            <app-profileform></app-profileform>
+                        </div>
+
+                    </div>
+                </nz-tab>
+
+
+
+                <!-- Address Details -->
+                <nz-tab nzTitle="Address Details">
+                    <div class="tab-content">
+                        <app-address></app-address>
+                    </div>
+                </nz-tab>
+
+                <!-- Company Details -->
+                <nz-tab nzTitle="Company Details">
+                    <div class="tab-content">
+                        <app-company></app-company>
+                    </div>
+                </nz-tab>
+            </nz-tabs>
+        </nz-card>
+    </div>
+</div>

@@ -1,0 +1,64 @@
+.email-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding: 8px 0;
+}
+
+.email-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mail-icon {
+  font-size: 18px;
+  color: #1890ff;
+}
+
+.email-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.delete-icon {
+  color: red;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.btn-group {
+  margin-top: 12px;
+  display: flex;
+  gap: 10px;
+}
+
+.resend-link {
+  display: block;
+  margin: 10px 0;
+  color: #1890ff;
+  cursor: pointer;
+}
+.icon{
+    width:40px;
+    height:40px;
+    background-color: #E6F7FF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50px;
+}
+.email-details h3,.add-email h3,.verify-email h3{
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.email-details p,.add-email p,.verify-email p{
+  margin: 0;
+  font-size: 14px;
+  color: #888;
+  margin-bottom: 10px;
+}

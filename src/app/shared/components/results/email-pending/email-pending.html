@@ -1,0 +1,25 @@
+<!-- Loader Overlay -->
+@if (loading()) {
+  <app-loader></app-loader>
+}
+<div class="flex flex-col items-center">
+  <nz-result
+    nzStatus="success"
+    nzTitle="Verify your email address"
+    nzSubTitle="We've sent an activation link to your email address: {{userEmail}}"
+  >
+    <div nz-result-extra class="flex flex-col items-center gap-4">
+      <p class="text-sm text-[#000000] text-center">
+        Please check your inbox and click on the activation link to verify your account.
+        If you can't find the email, check your spam folder.
+      </p>
+      <button 
+        nz-button 
+        nzType="primary" 
+        (click)="resendActivationLink()"
+      >
+        Resend activation link
+      </button>
+    </div>
+  </nz-result>
+</div>

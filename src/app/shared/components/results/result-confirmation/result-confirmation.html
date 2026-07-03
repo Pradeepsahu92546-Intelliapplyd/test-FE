@@ -1,0 +1,34 @@
+<div class="result-container">
+  <nz-result
+    [nzStatus]="status"
+    [nzTitle]="title"
+    [nzSubTitle]="subTitleTemplate"
+  >
+    <!-- Dynamic Subtitle Template -->
+    <ng-template #subTitleTemplate>
+      <div class="subtitle-wrapper">
+        @if (requestId || time) {
+          <p class="meta-info">
+            @if (requestId) { <span>Request Id : {{ requestId }}</span> }
+            @if (requestId && time) { <span class="separator"> | </span> }
+            @if (time) { <span>Time : {{ time }}</span> }
+          </p>
+        }
+        <p class="main-message">{{ message }}</p>
+      </div>
+    </ng-template>
+
+    <!-- Buttons -->
+    <div nz-result-extra>
+      <button nz-button nzType="primary" (click)="onPrimaryClick()">
+        {{ primaryBtnText }}
+      </button>
+      
+      @if (showSecondaryBtn) {
+        <button nz-button nzType="default" (click)="onSecondaryClick()">
+          {{ secondaryBtnText }}
+        </button>
+      }
+    </div>
+  </nz-result>
+</div>

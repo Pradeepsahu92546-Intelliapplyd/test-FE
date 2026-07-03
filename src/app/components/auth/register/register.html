@@ -1,0 +1,145 @@
+<!-- Loader Overlay -->
+@if (loading()) {
+<app-loader></app-loader>
+}
+
+<!-- Form container (still present under overlay but blocked by it) -->
+<form [formGroup]="form" (ngSubmit)="onSubmit()" nz-form class="space-y-5">
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div>
+      <label class="block mb-1 text-sm font-medium">First Name</label>
+      <input nz-input placeholder="First Name" formControlName="first_name" class="!h-[32px]" />
+      @if (form.get('first_name')?.invalid && form.get('first_name')?.touched) {
+      <div class="text-[#f5222d] text-sm">
+        First Name is required
+      </div>
+      }
+    </div>
+    <div class="flex flex-col space-y-1">
+      <label class="block mb-1 text-sm font-medium">Last Name</label>
+      <input nz-input placeholder="Last Name" formControlName="last_name" class="!h-[32px]" />
+      @if (form.get('last_name')?.invalid && form.get('last_name')?.touched) {
+      <div class="text-[#f5222d] text-sm">
+        Last Name is required
+      </div>
+      }
+    </div>
+  </div>
+
+  <div class="flex flex-col space-y-1">
+    <label class="block mb-1 text-sm font-medium">Email</label>
+    <input nz-input placeholder="Email" formControlName="email" type="email" class="!h-[32px]" />
+    @if (form.get('email')?.invalid && form.get('email')?.touched) {
+    <div class="text-[#f5222d] text-sm">
+      Email is required
+    </div>
+    }
+  </div>
+
+  <div class="flex flex-col space-y-1">
+    <label class="block mb-1 text-sm font-medium">Phone Number</label>
+    <div class="flex flex-row gap-2">
+      <input nz-input class="!w-20" value="+91" disabled />
+      <input nz-input placeholder="Phone" formControlName="phone_number" class="!h-[32px]" />
+    </div>
+    @if (form.get('phone_number')?.invalid && (form.get('phone_number')?.errors?.['required'] && form.get('phone_number')?.touched ||
+    form.get('phone_number')?.errors?.['pattern'])) {
+    <span class="text-[#f5222d] text-sm">
+      {{
+      form.get('phone_number')?.errors?.['required']
+      ? 'Phone number is required'
+      : 'Invalid phone number. Please enter a valid Indian phone number.'
+      }}
+    </span>
+    }
+  </div>
+
+  <!-- <div class="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+    <div>
+      <label class="block mb-1 text-sm font-medium">Account Type</label>
+      <nz-select formControlName="account_type" class="!h-[32px] !w-full">
+        @for (type of account_types; track type) {
+        <nz-option [nzValue]="type" [nzLabel]="type | titlecase"></nz-option>
+        }
+      </nz-select>
+    </div>
+    <div class="w-full">
+      <label class="block mb-1 text-sm font-medium">User Type</label>
+      <nz-select formControlName="user_type" class="!h-[32px] !w-full">
+        @for (role of user_types; track role) {
+        <nz-option [nzValue]="role" [nzLabel]="role | titlecase"></nz-option>
+        }
+      </nz-select>
+    </div>
+  </div> -->
+
+  <!-- Create password -->
+  <div>
+    <label class="block mb-1 text-sm font-medium">Create Password</label>
+    <nz-input-group [nzSuffix]="suffixIcon">
+      <input nz-input placeholder="Create New Password" [type]="passwordVisibleCreate ? 'text' : 'password'"
+        formControlName="password" />
+    </nz-input-group>
+    <ng-template #suffixIcon>
+      <span (click)="togglePasswordCreate()" class="cursor-pointer">
+        <nz-icon [nzType]="passwordVisibleCreate ? 'eye-invisible' : 'eye'"></nz-icon>
+      </span>
+    </ng-template>
+    @if (form.get('password')?.errors?.['required'] && form.get('password')?.touched) {
+    <span class="text-sm text-[#f5222d]">
+      Password is required
+    </span>
+    }
+    @else if (form.get('password')?.errors?.['minlength'] && form.get('password')?.touched) {
+    <span class="text-sm text-[#f5222d]">Password must be at least 6 characters</span>
+    }
+  </div>
+
+  <!-- Confirm password -->
+  <div>
+    <label class="block mb-1 text-sm font-medium">Confirm Password</label>
+    <nz-input-group [nzSuffix]="confirmPasswordSuffixIcon">
+      <input nz-input placeholder="Confirm Password" [type]="passwordVisibleConfirm ? 'text' : 'password'"
+        formControlName="password2" />
+    </nz-input-group>
+    <ng-template #confirmPasswordSuffixIcon>
+      <span (click)="togglePasswordConfirm()" class="cursor-pointer">
+        <nz-icon [nzType]="passwordVisibleConfirm ? 'eye-invisible' : 'eye'"></nz-icon>
+      </span>
+    </ng-template>
+    @if (form.get('password2')?.errors?.['required'] && form.get('password2')?.touched) {
+    <span class="text-sm text-[#f5222d]">Confirm password is required</span>
+    }
+    @else if (form.errors?.['passwordMismatch'] && form.get('password2')?.touched) {
+    <span class="text-sm text-[#f5222d]">Passwords do not match</span>
+    }
+  </div>
+
+  <!-- Terms -->
+  <!-- <div class="flex flex-col"> 
+    <div class="flex">
+      <label nz-checkbox formControlName="agree" class="leading-6">
+        I agree with all
+        <a class="text-blue-600 hover:underline cursor-pointer">Terms & Conditions</a>
+      </label>
+    </div> -->
+
+    <!-- Error Message -->
+    <!-- @if (form.get('agree')?.touched && form.get('agree')?.errors?.['required']) {
+    <p class="text-red-600 text-xs mt-1">
+      You must agree to the terms to continue.
+    </p>
+    }
+  </div> -->
+
+  <!-- Submit -->
+  <button nz-button nzType="primary" class="w-full" [disabled]="loading()" [nzLoading]="loading()">
+    Sign Up
+  </button>
+
+  <div class="text-left mt-2">
+    <a class="text-sm cursor-pointer text-gray-600" (click)="switchToLogin.emit()">
+      Already have an account? Login
+    </a>
+  </div>
+</form>

@@ -1,0 +1,86 @@
+<!-- Loader -->
+@if (loading()) {
+  <app-loader></app-loader>
+}
+
+<!-- Form container  -->
+<form [formGroup]="form" (ngSubmit)="onSubmit()" nz-form class="space-y-6" data-testid="login-form">
+  <div>
+    <label class="block mb-1 text-sm font-medium">Email</label>
+    <input
+      nz-input
+      placeholder="Enter Your Email Id"
+      formControlName="email"
+      type="email"
+    />
+    @if (submitted() && form.controls['email'].invalid) {
+      <span class="text-xs text-red-500">
+        Email is required
+      </span>
+    }
+  </div>
+
+  <div>
+    <label class="block mb-1 text-sm font-medium">Password</label>
+    <nz-input-group [nzSuffix]="suffixIcon">
+      <input
+        nz-input
+        [type]="passwordVisible() ? 'text' : 'password'"
+        placeholder="Enter password"
+        formControlName="password"
+      />
+    </nz-input-group>
+
+    <ng-template #suffixIcon>
+      <span (click)="togglePassword()" class="cursor-pointer">
+        <nz-icon [nzType]="passwordVisible() ? 'eye-invisible' : 'eye'"></nz-icon>
+      </span>
+    </ng-template>
+
+    @if (submitted() && form.controls['password'].invalid) {
+      <span class="text-xs text-red-500">
+        Password is required
+      </span>
+    }
+  </div>
+
+  <!-- <div>
+    <label nz-checkbox formControlName="agree" class="leading-6">
+      I agree with all
+      <a class="text-blue-600 hover:underline cursor-pointer">
+        Terms & Conditions
+      </a>
+      and
+      <a class="text-blue-600 hover:underline cursor-pointer">
+        Privacy Policy
+      </a>
+      of Simulysis
+    </label>
+  </div> -->
+
+  <button
+    nz-button
+    nzType="primary"
+    class="w-full"
+    [disabled]="loading()"
+    [nzLoading]="loading()"
+    data-testid="login-button"
+  >
+    Login
+  </button>
+
+  <app-input-dialog
+    [title]="'Forget password'"
+    [content]="'Enter Your registered Email'"
+    [okText]="'password resent link'"
+    [cancelText]="'Cancel'"
+    (confirmed)="handleForgotPassword($event)"
+  >
+  </app-input-dialog>
+
+  <div class="text-left mt-2">
+    <a data-testid="forgot-password-link" class="text-sm text-blue-600 cursor-pointer" (click)="openEmailConfirm()" data-testid="forgot-password-link">
+      Forget password ?
+    </a>
+  </div>
+</form>

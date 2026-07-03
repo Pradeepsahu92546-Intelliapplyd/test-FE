@@ -1,0 +1,64 @@
+<app-confirmation
+  #deleteConfirm
+  [title]="'Delete Account'"
+  [content]="'Are you sure you want to delete your account?'"
+  [okText]="'Confirm'"
+  [cancelText]="'Cancel'"
+  [okColor]="true"
+  (confirmed)="deleteAccount()">
+</app-confirmation>
+
+<!-- Confirmation for Deactivate -->
+<app-confirmation
+  #deactivateConfirm
+  [title]="'Deactivate Account'"
+  [content]="'Are you sure you want to deactivate your account?'"
+  [okText]="'Confirm'"
+  [cancelText]="'Cancel'"
+  [okColor]="true"
+  (confirmed)="deactivateAccount()">
+</app-confirmation>
+
+<nz-card class="rounded-2xl shadow-md border-0 p-6 bg-white">
+  <h2 class="text-lg font-semibold mb-1">Account Closure & Inactivity</h2>
+
+  <!-- Deactivate -->
+  <div class="mt-8">
+    <div class="flex items-center justify-between">
+      <div>
+        <p class="font-medium">Deactivate Account</p>
+        <p class="text-gray-500 text-sm">Receive reports of your running analysis</p>
+      </div>
+      <button
+        nz-button
+        id="deactivate-btn"
+        nzType="primary"
+        nzDanger
+        class="!w-28"
+        [nzLoading]="loading"
+        (click)="triggerDeactivate()">
+        Deactivate
+      </button>
+    </div>
+  </div>
+
+  <!-- Delete -->
+  <div class="mt-8">
+    <div class="flex items-center justify-between">
+      <div>
+        <p class="font-medium">Delete Account</p>
+        <p class="text-gray-500 text-sm">Receive reports of your running analysis</p>
+      </div>
+      <button
+        nz-button
+        id="delete-btn"
+        nzType="primary"
+        nzDanger
+        class="!w-28"
+        [nzLoading]="loading"
+        (click)="triggerDelete()">
+        Delete
+      </button>
+    </div>
+  </div>
+</nz-card>

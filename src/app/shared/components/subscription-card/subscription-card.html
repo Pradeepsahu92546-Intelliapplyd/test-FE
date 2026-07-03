@@ -1,0 +1,85 @@
+<div
+  class="rounded-xl border-[#D9D9D9] bg-white shadow-sm hover:shadow transition-shadow duration-200 flex flex-col min-h-[442px] max-w-[300px] min-w-[300px]"
+  [class.border-blue-500]="recommended"
+>
+  <!-- Header -->
+  <div class="p-6 pb-1">
+    <div class="flex items-start gap-2">
+      <h3 class="text-2xl font-semibold leading-tight capitalize">
+        {{ title }}
+      </h3>
+      @if (recommended) {
+        <nz-tag nzColor="blue" class="mt-1">Recommended</nz-tag>
+      }
+    </div>
+    <p class="text-gray-500 mt-2">{{ subtitle }}</p>
+  </div>
+
+  <!-- Billing toggle -->
+  @if (showBillingToggle) {
+    <div class="px-6">
+      <label class="sr-only">Billing period</label>
+      <nz-radio-group
+        [ngModel]="billing"
+        (ngModelChange)="onBillingChange($event)"
+      >
+        <label nz-radio-button [nzValue]="'monthly'">Monthly</label>
+        <label nz-radio-button [nzValue]="'annual'">
+          Annual ( save 25 % )
+        </label>
+      </nz-radio-group>
+    </div>
+  }
+
+  <!-- Price or Billing Info -->
+  @if (showBillingToggle) {
+    <div class="px-6 pt-3">
+      @if (showPrice) {
+        <!-- Show price for prepaid plans -->
+        <div class="text-gray-800">
+          <span class="text-base align-middle px-[4px]">₹</span>
+          <span class="text-sm font-semibold align-middle">{{ price }}</span>
+          <span class="ml-1 text-[11px] text-gray-500">/ {{ periodLabel() }}</span>
+        </div>
+      } @else {
+        <!-- Show billing info for postpaid plans -->
+        <div class="text-gray-800 text-sm font-semibold">
+          {{ billing === 'annual' ? 'Billed annually' : 'Billed monthly' }}
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Divider -->
+  <nz-divider></nz-divider>
+
+  <!-- Features -->
+  @if (features.length) {
+    <ul class="px-6 flex-1 space-y-2">
+      @for (f of features; track f) {
+        <li class="flex items-start gap-3 text-gray-700">
+          <span
+            nz-icon
+            nzType="check"
+            nzTheme="outline"
+            class="text-green-600 mt-1"
+          ></span>
+          <span>{{ f }}</span>
+        </li>
+      }
+    </ul>
+  }
+
+  <!-- CTA -->
+  <div class="px-6 py-5">
+    <button
+      nz-button
+      [nzType]="ctaDisabled ? 'default' : 'primary'"
+      class="w-full"
+      [disabled]="ctaDisabled"
+      (click)="select.emit()"
+    >
+      {{ ctaText }}
+    </button>
+  </div>
+</div>

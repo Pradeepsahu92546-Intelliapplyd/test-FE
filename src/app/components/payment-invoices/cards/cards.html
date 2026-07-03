@@ -1,0 +1,46 @@
+<app-card-dialog
+  [title]="'Enter your Card Details'"
+  [okText]="'Confirm'"
+  [cancelText]="'Cancel'"
+  (confirmed)="handelOnCardData($event)">
+</app-card-dialog>
+
+<div class="container">
+  <!-- If no saved cards -->
+  <div *ngIf="!savedCards || savedCards.length === 0; else savedCardsList">
+    <p class="empty-text">No saved cards. Please add one.</p>
+    <button nz-button nzType="primary" (click)="addNewCard()">Add new card</button>
+  </div>
+
+  <!-- Saved cards list -->
+  <ng-template #savedCardsList>
+    <h4>Saved Cards</h4>
+    <div *ngFor="let card of savedCards" class="card-item">
+      <nz-card [nzBordered]="true">
+        <div class="card-details">
+          <!-- Card logo -->
+          <img src="https://upload.wikimedia.org/wikipedia/commons/0/04/Visa.svg" class="card-logo" />
+
+          <!-- Card info -->
+          <div class="card-text">
+            <div>Card End Number: {{ card.card_number.slice(-4) }}</div>
+            <div class="expiry">Exp: {{ card.expiry }}</div>
+          </div>
+
+          <!-- Actions -->
+          <div class="card-actions">
+            <nz-tag *ngIf="card.isDefault" nzColor="blue">Default</nz-tag>
+            <a *ngIf="!card.isDefault" (click)="setDefault(card.card_number)">Set as default</a>
+            <button nz-button nzType="text" nzDanger (click)="showDeleteConfirm(card.card_number)">
+              <i nz-icon nzType="delete"></i>
+            </button>
+          </div>
+        </div>
+      </nz-card>
+    </div>
+
+    <button nz-button nzType="primary" class="mt-2 btn" (click)="addNewCard()">
+      Add new Card
+    </button>
+  </ng-template>
+</div>

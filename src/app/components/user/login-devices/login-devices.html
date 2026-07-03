@@ -1,0 +1,71 @@
+
+
+<div class="p-6">
+
+  <!-- Section Header -->
+  <div class="flex items-center gap-2 mb-6">
+    <div class="w-14 h-14 flex items-center justify-center bg-blue-100 rounded-full">
+      <i nz-icon nzType="laptop" nzTheme="outline" class="text-2xl text-blue-500"></i>
+    </div>
+  </div>
+
+  <h2 class="text-xl font-semibold mt-2">Your Devices</h2>
+  <p class="text-sm text-gray-600 mb-4">
+    Your devices linked to this account in Simulysis analytics
+  </p>
+
+  <!-- Logout All Button -->
+  <button
+    nz-button
+    nzType="primary"
+    [nzLoading]="logoutAllLoading"
+    [disabled]="devices.length === 0 || isLoading"
+    (click)="logoutAll()"
+    class="mb-4"
+  >
+    Logout from all devices
+  </button>
+
+  <!-- Loading Skeleton -->
+  <ng-container *ngIf="isLoading">
+    <div *ngFor="let i of [1, 2, 3]" class="flex justify-between items-center py-3 border-b border-gray-200">
+      <div class="flex items-center gap-3 w-full">
+        <nz-skeleton-element nzType="avatar" [nzActive]="true" nzSize="default"></nz-skeleton-element>
+        <div class="flex flex-col gap-1 flex-1">
+          <nz-skeleton-element nzType="input" [nzActive]="true" style="width:160px; height:14px"></nz-skeleton-element>
+          <nz-skeleton-element nzType="input" [nzActive]="true" style="width:120px; height:12px"></nz-skeleton-element>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- Device List -->
+  <div class="mt-4" *ngIf="!isLoading && devices.length > 0">
+    @for (d of devices; track d.name) {
+      <div class="flex justify-between items-center py-3 border-b border-gray-200">
+        <div class="flex items-center gap-3">
+          <i nz-icon [nzType]="d.icon" class="text-2xl text-blue-500"></i>
+          <div>
+            <p class="m-0 font-medium">{{ d.name }}</p>
+            <p class="m-0 text-xs text-gray-500">{{ d.time }}</p>
+          </div>
+        </div>
+        <i
+          nz-icon
+          nzType="logout"
+          nzTheme="outline"
+          class="text-xl text-blue-500 cursor-pointer hover:text-red-400 transition-colors"
+          (click)="logoutDevice(d)"
+        ></i>
+      </div>
+    }
+  </div>
+
+  <!-- Empty State -->
+   @if(!isLoading && devices.length === 0) {
+  <p class="text-gray-500 text-sm mt-4">
+    No devices are currently linked.
+  </p>
+}
+
+</div>

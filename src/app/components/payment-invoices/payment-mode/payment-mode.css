@@ -1,0 +1,43 @@
+.container {
+  display: flex;
+  gap: 20px;
+    padding: 30px;
+
+}
+
+.left {
+  flex: 1;
+}
+.title{
+  font-size: 19px;
+}
+.tab-content {
+  padding: 2rem;
+}
+
+/* Tabs customization */
+::ng-deep .ant-tabs-tab {
+  font-weight: 500;
+  padding: 16px 20px !important;
+}
+
+::ng-deep .ant-tabs-nav {
+  margin-bottom: 0;
+}
+
+::ng-deep .ant-tabs-nav-wrap {
+  border-bottom: 1px solid #f0f0f0;
+}
+
+::ng-deep .ant-tabs-tabpane {
+  padding: 0;
+}
+
+::ng-deep .ant-tabs-tab-active {
+  color: #1890ff !important;
+  font-weight: 600;
+}
+
+::ng-deep .ant-tabs-ink-bar {
+  background: #1890ff;
+}

@@ -1,0 +1,37 @@
+<nz-card id="image-card"
+  class="!flex !flex-col !items-center !justify-start !p-8 !border !border-gray-300 !rounded-xl !w-full !text-center !bg-white !shadow-md !h-fit-content"
+  [nzBordered]="false">
+  <!-- Profile Image -->
+<div id="profile-section" class="relative inline-block mb-6">
+  <img id="profile-img" [src]="profileImg" [alt]="defalutImg"
+    class="w-28 h-28 rounded-full border-4 border-white shadow-md object-cover" 
+    [class.opacity-50]="isUploading" (error)="onImgError()" /> <!-- Dim image during upload -->
+
+  <input id="file-input" type="file" #fileInput accept="image/*" (change)="onFileSelected($event)" hidden    data-testid="file-input" />
+
+  <!-- Camera Button (Also serves as the status indicator) -->
+  <button id="camera-btn" nz-button (click)="fileInput.click()" [disabled]="isUploading"
+    class="!absolute !bottom-[1px] !right-1 !w-9 !h-9 !rounded-full !bg-white !flex !items-center !justify-center !shadow-md !border !border-gray-300" data-testid="camera-button">
+    
+    @if (isUploading) {
+      <nz-icon nzType="loading" nzTheme="outline"></nz-icon>
+    } @else {
+      <nz-icon nzType="camera" nzTheme="outline"></nz-icon>
+    }
+  </button>
+</div>
+
+  <!-- Name + Email -->
+  <div id="user-info" class="flex flex-col items-center gap-0">
+    <div id="user-name" class="font-semibold text-base text-gray-800">{{ firstName }} {{ lastName }}</div>
+    <p id="user-email" class="text-sm text-gray-500">{{ email }}</p>
+  </div>
+
+
+  <!-- Logout Button -->
+  <!-- <button id="logout-btn" nz-button nzType="primary"
+    class="!w-full !mt-4 !flex !items-center !justify-center !gap-2 !py-3 !text-white !rounded-md !font-medium !cursor-pointer">
+    <i id="logout-icon" nz-icon nzType="logout"></i>
+    <span>Logout</span>
+  </button> -->
+</nz-card>

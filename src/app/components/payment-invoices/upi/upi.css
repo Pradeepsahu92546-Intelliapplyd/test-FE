@@ -1,0 +1,22 @@
+.upi-card {
+    max-width: 500px;
+    background: transparent !important;
+    padding-left: 0;
+
+
+}
+
+
+.upi-option {
+    display: block;
+    margin-bottom: 8px;
+}
+
+.add-btn {
+    margin-top: 12px;
+    width: 130px;
+}
+
+.btn {
+    width: 130px;
+}

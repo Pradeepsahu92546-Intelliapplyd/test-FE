@@ -1,0 +1,86 @@
+.container {
+    background-color: white;
+    padding: 30px;
+    border-radius: 10px;
+}
+
+.filter-methods {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    justify-content: space-between;
+}
+
+.search {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.title-filter {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    justify-content: space-between;
+    margin-top: 25px;
+    margin-bottom: 20px;
+}
+
+.title-filter h1 {
+    font-size: 18px;
+}
+
+.download-filter {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    justify-content: space-evenly;
+}
+
+th {
+    font-size: 16px;
+}
+
+
+
+.icon {
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50px;
+}
+
+.icon-size {
+    font-size: 25px;
+}
+.upperContainer{
+    margin-top: 15px;
+    margin-bottom: 20px;
+
+}
+
+.cards {
+    width:60%;
+    display: flex;
+    gap: 12px;
+  
+}
+.upperContainer h1{
+    font-size: 18px;
+    margin-bottom: 20px;
+}
+.container h1{
+    font-size: 18px;
+}
+
+.tableFilter{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    justify-content: space-between;
+}
+.fileIcon-size {
+    font-size: 18px;
+}

@@ -1,0 +1,9 @@
+<nz-modal [(nzVisible)]="isVisible"  [nzTitle]="title"  (nzOnCancel)="handleCancel()" (nzOnOk)="handleOk()">
+    <ng-container *nzModalContent>
+        <p>{{content}}</p>
+        <div class="otp-container">
+            <input nz-input  [(ngModel)]="otp" type="text"  />
+        </div>
+       
+    </ng-container>
+</nz-modal>

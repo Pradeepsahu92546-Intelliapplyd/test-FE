@@ -1,0 +1,79 @@
+/* ═══════════════════════════════════
+   CARD WRAPPER
+════════════════════════════════════ */
+.pref-card {
+  padding: 24px;
+}
+
+/* ═══════════════════════════════════
+   fix issue-1:
+   Title (left) + Save button (right)
+   on the SAME row with proper spacing
+════════════════════════════════════ */
+.pref-header-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+/* ═══════════════════════════════════
+   SELECT ROWS
+════════════════════════════════════ */
+.pref-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  gap: 16px;
+}
+
+.pref-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #1a1a2e;
+  white-space: nowrap;
+  flex-shrink: 0;
+  min-width: 200px;
+}
+
+.pref-select {
+  width: 500px;
+  max-width: 100%;
+}
+
+/* ═══════════════════════════════════
+   TOGGLE ROWS
+════════════════════════════════════ */
+.pref-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 14px 0;
+  border-bottom: 1px solid #f5f5f5;
+}
+.pref-toggle-row:last-child { border-bottom: none; }
+
+/* ═══════════════════════════════════
+   SKELETON LOADING ROWS
+════════════════════════════════════ */
+.pref-row-skeleton {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  gap: 16px;
+}
+
+/* ═══════════════════════════════════
+   RESPONSIVE
+════════════════════════════════════ */
+@media (max-width: 720px) {
+  .pref-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .pref-select { width: 100%; }
+  .pref-header-row { flex-direction: column; }
+}

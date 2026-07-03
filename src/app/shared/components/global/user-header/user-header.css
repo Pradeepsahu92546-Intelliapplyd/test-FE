@@ -1,0 +1,107 @@
+﻿/* Shared user header styling */
+.user-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 16px;
+  cursor: pointer;
+  border-bottom: 1px solid #f5f5f5;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.user-header:hover {
+  background: #f9f9f9;
+}
+
+/* Collapsed state: center avatar */
+.user-header.collapsed {
+  justify-content: center;
+  padding: 14px 0;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+}
+.user-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1a1a2e;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.user-email {
+  font-size: 11px;
+  color: #888;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.arrow-icon {
+  font-size: 10px;
+  margin-left: 4px;
+  color: #888;
+}
+
+/* dropdown menu additional styling may remain in global css */
+
+/* dropdown menu styles */
+.user-dropdown-menu {
+  display: flex;
+  margin-left: 10px;
+  padding: 5px 10px;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  align-self: stretch;
+  border-radius: 8px;
+  background: var(--Neutral-5, #d9d9d9);
+  min-width: 200px;
+}
+.user-dropdown-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #f0f0f0;
+  width: 100%;
+}
+.user-dropdown-name {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1a1a2e;
+}
+.user-email {
+  font-size: 11px;
+  color: #888;
+}
+
+.dropdown-items {
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  width: 100%;
+}
+::ng-deep .dropdown-items.ant-menu .ant-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  height: 34px;
+  line-height: 34px;
+  border-radius: 6px;
+  padding: 0 8px !important;
+}
+::ng-deep .dropdown-items.ant-menu .ant-menu-item:hover {
+  background: #f5f5f5;
+}

@@ -1,0 +1,99 @@
+<nz-modal
+  [(nzVisible)]="isVisible"
+  [nzTitle]="title"
+  [nzOkText]="okText"
+  [nzCancelText]="cancelText"
+  (nzOnCancel)="handleCancel()"
+  [nzFooter]="null"
+>
+  <ng-container *nzModalContent>
+    <form #cardForm="ngForm" (ngSubmit)="handleOk()" novalidate>
+      <!-- Cardholder Name -->
+      <div class="form-field">
+        <label>Cardholder name</label>
+        <input
+          nz-input
+          name="cardholderName"
+          [(ngModel)]="cardholderName"
+          placeholder="Enter cardholder name"
+          required
+          #cardholderNameCtrl="ngModel"
+        />
+        <div class="error" *ngIf="cardholderNameCtrl.invalid && cardholderNameCtrl.touched">
+          Cardholder name is required.
+        </div>
+      </div>
+
+      <!-- Card Number -->
+      <div class="form-field card-number">
+        <label>Card number</label>
+        <div class="card-input">
+          <input
+            nz-input
+            name="cardNumber"
+            [(ngModel)]="cardNumber"
+            maxlength="16"
+            placeholder="XXXX XXXX XXXX XXXX"
+            required
+            pattern="^(\d{4} ?){4}$"
+            #cardNumberCtrl="ngModel"
+          />
+          <img
+            src="https://upload.wikimedia.org/wikipedia/commons/0/04/Visa.svg"
+            class="visa-logo"
+            alt="Visa"
+          />
+        </div>
+        <div class="error" *ngIf="cardNumberCtrl.invalid && cardNumberCtrl.touched">
+          Enter a valid 16-digit card number.
+        </div>
+      </div>
+
+      <!-- Expiration + CVV -->
+      <div class="row">
+        <div class="form-field half">
+          <label>Expiration date</label>
+          <input
+            nz-input
+            name="expiryDate"
+            [(ngModel)]="expiryDate"
+            placeholder="MM/YY"
+            required
+            pattern="^(0[1-9]|1[0-2])\/\d{2}$"
+            #expiryDateCtrl="ngModel"
+          />
+          <div class="error" *ngIf="expiryDateCtrl.invalid && expiryDateCtrl.touched">
+            Enter expiry date in MM/YY format.
+          </div>
+        </div>
+        <div class="form-field half">
+          <label>CVV</label>
+          <input
+            nz-input
+            name="cvv"
+            [(ngModel)]="cvv"
+            maxlength="4"
+            placeholder="CVV"
+            type="password"
+            required
+            pattern="^[0-9]{3,4}$"
+            #cvvCtrl="ngModel"
+          />
+          <div class="error"  *ngIf="cvvCtrl.invalid && cvvCtrl.touched">
+            Enter a valid CVV (3–4 digits).
+          </div>
+        </div>
+      </div>
+      <div class="default">
+        <label>Set it as Default</label>
+        <nz-switch name="isDefault" [(ngModel)]="switchValue"></nz-switch>
+      </div>
+      <!-- Button -->
+      <div class="footer-btn">
+        <button nz-button nzType="primary" class="add-btn" [disabled]="cardForm.invalid">
+          Add Card
+        </button>
+      </div>
+    </form>
+  </ng-container>
+</nz-modal>

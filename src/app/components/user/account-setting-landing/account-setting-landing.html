@@ -1,0 +1,6 @@
+<!-- Show sidenav everywhere except /auth -->
+<app-sidenav *ngIf="!isAuthRoute"></app-sidenav>
+
+
+<!-- For /auth routes (login/register) just show the router-outlet -->
+<router-outlet *ngIf="isAuthRoute"></router-outlet>

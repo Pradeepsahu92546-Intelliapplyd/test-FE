@@ -1,0 +1,85 @@
+<!-- <div class="upperContainer">
+    <div class="cards">
+        <div class="!w-55 !h-25 !flex !items-center justify-center !space-x-6 !shadow-lg !rounded-2xl !bg-white"
+            *ngFor="let item of cardData">
+            <div class="icon" [style.background-color]="item.bg">
+                <nz-icon [nzType]="item.icon" nzTheme="fill" [style.color]="item.color" class="icon-size"></nz-icon>
+            </div>
+            <div>
+                <div class="!text-gray-500 !text-sm">{{ item.title }}</div>
+                <div class="!text-black !text-lg !font-semibold">
+                    ₹ {{ item.price }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div> -->
+
+
+
+<div class="container">
+    <h1>Invoice Summary</h1>
+    <div class="tableFilter">
+        <nz-tabs [(nzSelectedIndex)]="selectedTabIndex" (nzSelectedIndexChange)="onTabChange($event)">
+            <nz-tab nzTitle="All Invoices"></nz-tab>
+            <nz-tab nzTitle="Paid"></nz-tab>
+            <nz-tab nzTitle="Unpaid"></nz-tab>
+        </nz-tabs>
+
+        <!-- Filters -->
+        <div class="title-filter">
+            <div class="filter-methods">
+                <div class="search">
+                    <nz-input-group [nzPrefix]="prefixIconSearch">
+                        <input type="text" nz-input placeholder="input search text" [(ngModel)]="searchText"
+                            (input)="onSearch()" />
+                    </nz-input-group>
+
+                    <ng-template #prefixIconSearch>
+                        <nz-icon nzType="search"></nz-icon>
+                    </ng-template>
+
+                </div>
+                <div class="download-filter">
+                    <button nz-button nzType="primary" class="!mx-4">
+                        <nz-icon nzType="download" /> Export
+                    </button>
+                    <button nz-button nzType="primary">
+                        <nz-icon nzType="filter" /> Filter
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Table -->
+    <nz-table #basicTable [nzData]="filteredData">
+        <thead>
+            <tr>
+                <th>Invoice ID</th>
+                <th>Invoice Number</th>
+                <th>Date</th>
+                <th>Amount</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (data of basicTable.data; track data) {
+            <tr>
+                <td>{{ data.id }}</td>
+                <td>{{ data.invoice }}</td>
+                <td>{{ data.metadata.invoicedate}}</td>
+                <td>₹ {{ data.amount }}</td>
+                <td>
+                   <nz-tag [nzColor]="data.color"   class="!text-[12px] !w-18 !flex !items-center !justify-center">
+                        {{ data.status }}
+                    </nz-tag>
+                </td>
+                <td>
+                  <nz-icon nzType="file-text" nzTheme="outline" class="!text-blue-500 fileIcon-size !cursor-pointer" (click)="goToInvoice(data.id)"></nz-icon>
+                </td>
+            </tr>
+            }
+        </tbody>
+    </nz-table>
+</div>

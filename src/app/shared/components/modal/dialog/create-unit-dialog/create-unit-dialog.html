@@ -1,0 +1,33 @@
+<nz-modal [(nzVisible)]="isVisible" nzTitle="Create new unit" (nzOnCancel)="handleCancel()" [nzFooter]="modalFooter">
+  <ng-container *nzModalContent>
+    <form [formGroup]="unitForm" class="flex flex-col gap-4" data-testid="unit-form">
+
+      <!-- Unit Name -->
+      <div>
+        <label class="block font-medium mb-1">Unit name (Unique)</label>
+        <input nz-input formControlName="unitName" placeholder="Enter new unit name" />
+        @if(unitForm.get('unitName')?.invalid) {
+          <span class="text-red-500 text-xs">
+            Unit name is required
+          </span>
+        }
+      </div>
+
+      <!-- Description -->
+      <div>
+        <label class="block font-medium mb-1">Description</label>
+        <textarea nz-input formControlName="description" placeholder="Description in 20 words max"
+          [nzAutosize]="{ minRows: 2, maxRows: 4 }">
+        </textarea>
+      </div>
+
+    </form>
+  </ng-container>
+
+  <!-- Custom Footer matching the screenshot -->
+  <ng-template #modalFooter>
+    <button nz-button nzType="default" (click)="handleCancel()" data-testid="modal-cancel-button">Cancel</button>
+    <button nz-button nzType="primary" (click)="handleOk()" class="bg-blue-500"
+      data-testid="modal-create-button">Create</button>
+  </ng-template>
+</nz-modal>

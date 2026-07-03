@@ -1,0 +1,11 @@
+:host ::ng-deep .ant-steps-item-title {
+  color: #fff !important;
+}
+:host
+  ::ng-deep
+  .ant-steps-item-process
+  .ant-steps-item-container
+  .ant-steps-item-icon {
+  background: #3b82f6;
+  border-color: #3b82f6;
+}

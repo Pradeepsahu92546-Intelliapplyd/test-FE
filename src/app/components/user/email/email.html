@@ -1,0 +1,38 @@
+<!-- adding modal dialog -->
+<app-inputDialog
+ [title]="'Enter your Email Address'"
+ [content]="'Provide an email and optionally mark it as default.'"
+ [okText]="'Confirm'"
+ [cancelText]="'Cancel'"
+ (confirmed)="handelOnEmail($event)">
+</app-inputDialog>
+<!-- adding modal dialog -->
+
+<div class="email-details">
+    <h3>Email Address</h3>
+
+    @for (email of emails; let i = $index; track i) {
+      <div class="email-row">
+          <div class="email-left">
+              <div class="icon">
+                  <i nz-icon nzType="mail" nzTheme="outline" class="mail-icon"></i>
+              </div>
+              <div>
+                  <div>{{ email.address }}</div>
+                  <small>{{ email.createdAt }}</small>
+              </div>
+          </div>
+
+          <div class="email-right">
+              @if (email.isDefault) {
+                <nz-tag nzColor="#E6F7FF" class="!text-[#1098FF] !border !border-blue-500">Default</nz-tag>
+              } @else {
+                <i nz-icon nzType="delete" nzTheme="outline" class="delete-icon"
+                   (click)="deleteEmail(i)"></i>
+              }
+          </div>
+      </div>
+    }
+
+    <button nz-button nzType="primary" (click)="eamilDialog.showModal()">Add Email Address</button>
+</div>

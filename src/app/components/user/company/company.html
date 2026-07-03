@@ -1,0 +1,167 @@
+<div class="flex items-center justify-between mr-5">
+  <div class="heading">
+    <h3 class="m-0 text-base font-semibold">Company Details</h3>
+    <p class="m-0 text-sm text-gray-500">Manage your company information</p>
+  </div>
+
+  <!-- Edit button (only shows in view mode) -->
+  @if (!isEditMode) {
+    <button nz-button nzType="primary" class="ml-auto" id="edit-btn" (click)="editCompany()">
+      Edit
+    </button>
+  }
+</div>
+
+<br />
+
+<!-- Empty State -->
+@if (!showForm) {
+  <div class="text-center mt-12">
+    <nz-empty nzNotFoundContent="No company details found"></nz-empty>
+    <button
+      nz-button
+      nzType="primary"
+      class="mt-4"
+      id="add-btn"
+      (click)="addCompany()"
+    >
+      Add Company Details
+    </button>
+  </div>
+}
+
+<!-- Form / View -->
+@if (showForm) {
+  <div class="max-w-3xl mx-auto">
+    <form [formGroup]="companyForm" (ngSubmit)="saveCompany()">
+      <div class="flex gap-4 mb-4">
+        <!-- Company Name -->
+        <div class="flex flex-col flex-1">
+          <label class="text-sm font-medium text-gray-800 mb-1">Company Name</label>
+          <input
+            nz-input
+            id="name"
+            formControlName="name"
+            placeholder="Enter company name"
+          />
+          @if (f['name'].touched && f['name'].invalid) {
+            <div class="text-red-500 text-sm mt-1">
+              @if (f['name'].errors?.['required']) {
+                <span>Company name is required</span>
+              }
+            </div>
+          }
+        </div>
+
+        <!-- Company Type -->
+        <div class="flex flex-col flex-1">
+          <label class="text-sm font-medium text-gray-800 mb-1">Company Type</label>
+          <input
+          id="companyType"
+            nz-input
+            formControlName="companyType"
+            placeholder="Enter company type"
+          />
+          @if (f['companyType'] && f['companyType'].touched && f['companyType'].invalid) {
+            <div class="text-red-500 text-sm mt-1">
+              @if (f['companyType'].errors?.['required']) {
+                <span>Company type is required</span>
+              }
+            </div>
+          }
+        </div>
+      </div>
+
+      <div class="flex gap-4 mb-4">
+        <!-- GST -->
+        <div class="flex flex-col flex-1">
+          <label class="text-sm font-medium text-gray-800 mb-1">GST Number</label>
+          <input
+          id="gstNumber"
+            nz-input
+            formControlName="gstNumber"
+            placeholder="Enter GST number"
+          />
+          @if (f['gstNumber'] && f['gstNumber'].touched && f['gstNumber'].invalid) {
+            <div class="text-red-500 text-sm mt-1">
+              @if (f['gstNumber'].errors?.['required']) {
+                <span>GST number is required</span>
+              }
+              @if (f['gstNumber'].errors?.['pattern']) {
+                <span>Enter a valid GST number</span>
+              }
+            </div>
+          }
+        </div>
+
+        <!-- Phone -->
+        <div class="flex flex-col flex-1">
+          <label class="text-sm font-medium text-gray-800 mb-1">Phone Number</label>
+          <input
+          id="phoneNumber"
+            nz-input
+            formControlName="phoneNumber"
+            placeholder="Enter 10-digit phone number"
+          />
+          @if (f['phoneNumber'] && f['phoneNumber'].touched && f['phoneNumber'].invalid) {
+            <div class="text-red-500 text-sm mt-1">
+              @if (f['phoneNumber'].errors?.['required']) {
+                <span>Phone number is required</span>
+              }
+              @if (f['phoneNumber'].errors?.['pattern']) {
+                <span>Enter a valid 10-digit phone number</span>
+              }
+            </div>
+          }
+        </div>
+      </div>
+
+      <div class="flex gap-4 mb-4">
+        <!-- Website -->
+        <div class="flex flex-col w-full">
+          <label class="text-sm font-medium text-gray-800 mb-1">Website URL</label>
+          <input
+          id="url"
+            nz-input
+            formControlName="website"
+            placeholder="https://company.com"
+          />
+          @if (f['website'].touched && f['website'].invalid) {
+            <div class="text-red-500 text-sm mt-1">
+              @if (f['website'].errors?.['required']) {
+                <span>Website is required</span>
+              }
+              @if (f['website'].errors?.['pattern']) {
+                <span>Enter a valid website URL</span>
+              }
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex gap-3 mt-5 justify-end">
+        @if (isEditMode) {
+          <button
+            nz-button
+            nzType="default"
+            type="button"
+            id="cancel-btn"
+            (click)="cancelForm()"
+          >
+            Cancel
+          </button>
+          <button
+            nz-button
+            nzType="primary"
+            type="submit-btn"
+            id="save-btn"
+            [nzLoading]="isSaving"
+          >
+            Save Details
+          </button>
+        }
+      </div>
+    </form>
+  </div>
+}

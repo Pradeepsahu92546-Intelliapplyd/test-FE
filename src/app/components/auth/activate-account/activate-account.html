@@ -1,0 +1,36 @@
+<div class="activate-page">
+
+  <!-- ── Loading ── -->
+  @if (state === 'loading') {
+    <div class="loading-wrap">
+      <nz-spin nzSize="large" nzTip="Activating your account..."></nz-spin>
+    </div>
+  }
+
+  <!-- ── Success ── -->
+  @if (state === 'success') {
+    <app-result-confirmation
+      status="success"
+      [title]="resultTitle"
+      [message]="resultMessage"
+      [requestId]="requestId"
+      [time]="timestamp"
+      primaryBtnText="Go to Login"
+      [showSecondaryBtn]="false"
+      (primaryClick)="goToLogin()"
+    ></app-result-confirmation>
+  }
+
+  <!-- ── Error ── -->
+  @if (state === 'error') {
+    <app-result-confirmation
+      status="error"
+      [title]="resultTitle"
+      [message]="resultMessage"
+      primaryBtnText="Go to Login"
+      [showSecondaryBtn]="false"
+      (primaryClick)="goToLogin()"
+    ></app-result-confirmation>
+  }
+
+</div>

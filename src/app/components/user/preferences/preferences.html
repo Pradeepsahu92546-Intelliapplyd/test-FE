@@ -1,0 +1,131 @@
+<nz-card class="pref-card rounded-2xl shadow-sm border-0">
+
+  <!-- ── Loading Skeleton ── -->
+  <ng-container *ngIf="isLoading">
+    <div class="pref-header-row">
+      <div>
+        <nz-skeleton-element nzType="input" [nzActive]="true" style="width:180px; height:22px; margin-bottom:6px"></nz-skeleton-element>
+        <nz-skeleton-element nzType="input" [nzActive]="true" style="width:220px; height:16px"></nz-skeleton-element>
+      </div>
+      <nz-skeleton-element nzType="button" [nzActive]="true" style="width:130px; height:36px"></nz-skeleton-element>
+    </div>
+    <div *ngFor="let i of [1,2,3,4,5,6,7,8]" class="pref-row-skeleton">
+      <nz-skeleton-element nzType="input" [nzActive]="true" style="width:160px; height:16px"></nz-skeleton-element>
+      <nz-skeleton-element nzType="input" [nzActive]="true" style="width:500px; height:36px"></nz-skeleton-element>
+    </div>
+  </ng-container>
+
+  <!-- ── Loaded Content ── -->
+  <ng-container *ngIf="!isLoading">
+
+    <!-- ── fix issue-1: header row with title left, button right ── -->
+    <div class="pref-header-row">
+      <div>
+        <h2 class="text-lg font-semibold mb-1">Preferences</h2>
+        <p class="text-gray-500 mb-0">Manage your preferences</p>
+      </div>
+      <button
+        nz-button
+        nzType="primary"
+        [nzLoading]="isSaving"
+        [disabled]="!hasEdits"
+        (click)="savePreferences()"
+      >
+        Save Preferences
+      </button>
+    </div>
+
+    <nz-divider style="margin: 16px 0 20px"></nz-divider>
+
+    <!-- Theme -->
+    <div class="pref-row">
+      <label class="pref-label">Select Theme</label>
+      <nz-select [(ngModel)]="theme" class="pref-select">
+        <nz-option nzValue="light" nzLabel="Light Mode"></nz-option>
+        <nz-option nzValue="dark"  nzLabel="Dark Mode"></nz-option>
+      </nz-select>
+    </div>
+
+    <!-- Language — fix issue-3: nzShowSearch + nzServerSearch removed; options pre-loaded -->
+    <div class="pref-row">
+      <label class="pref-label">Language</label>
+      <nz-select [(ngModel)]="language" class="pref-select">
+        <nz-option nzValue="en-IN" nzLabel="English (India)"></nz-option>
+        <nz-option nzValue="en-US" nzLabel="English (US)"></nz-option>
+        <nz-option nzValue="hi"    nzLabel="Hindi"></nz-option>
+      </nz-select>
+    </div>
+
+    <!-- Currency -->
+    <div class="pref-row">
+      <label class="pref-label">Currency</label>
+      <nz-select [(ngModel)]="currency" class="pref-select">
+        <nz-option nzValue="INR" nzLabel="Indian Rupee (INR)"></nz-option>
+        <nz-option nzValue="USD" nzLabel="US Dollar (USD)"></nz-option>
+        <nz-option nzValue="EUR" nzLabel="Euro (EUR)"></nz-option>
+      </nz-select>
+    </div>
+
+    <!-- Timezone -->
+    <div class="pref-row">
+      <label class="pref-label">Timezone</label>
+      <nz-select [(ngModel)]="timezone" class="pref-select">
+        <nz-option nzValue="Asia/Kolkata"      nzLabel="Asia/Kolkata"></nz-option>
+        <nz-option nzValue="America/New_York"  nzLabel="America/New_York"></nz-option>
+        <nz-option nzValue="Europe/London"     nzLabel="Europe/London"></nz-option>
+      </nz-select>
+    </div>
+
+    <!-- Session Timeout -->
+    <div class="pref-row">
+      <label class="pref-label">Session Timeout (minutes)</label>
+      <nz-select [(ngModel)]="sessionTimeout" class="pref-select">
+        <nz-option [nzValue]="30"  nzLabel="30 minutes"></nz-option>
+        <nz-option [nzValue]="60"  nzLabel="60 minutes"></nz-option>
+        <nz-option [nzValue]="120" nzLabel="120 minutes"></nz-option>
+      </nz-select>
+    </div>
+
+    <nz-divider style="margin: 20px 0"></nz-divider>
+
+    <!-- Toggles -->
+      <div class="pref-header-row">
+      <div>
+        <h2 class="text-lg font-semibold mb-1">Notifications Settings</h2>
+      </div>
+    </div>
+    <div class="pref-toggle-row">
+      <div>
+        <p class="font-medium mb-0">Reports</p>
+        <p class="text-gray-500 text-sm mb-0">Receive reports of your running analysis</p>
+      </div>
+      <nz-switch [(ngModel)]="reports"></nz-switch>
+    </div>
+
+    <div class="pref-toggle-row">
+      <div>
+        <p class="font-medium mb-0">Promotion</p>
+        <p class="text-gray-500 text-sm mb-0">Receive marketing communication regarding Simulysis products, services, and events</p>
+      </div>
+      <nz-switch [(ngModel)]="promotion"></nz-switch>
+    </div>
+
+    <div class="pref-toggle-row">
+      <div>
+        <p class="font-medium mb-0">Security Alerts</p>
+        <p class="text-gray-500 text-sm mb-0">Receive security alerts via email</p>
+      </div>
+      <nz-switch [(ngModel)]="securityAlerts"></nz-switch>
+    </div>
+
+    <div class="pref-toggle-row">
+      <div>
+        <p class="font-medium mb-0">MFA Enforced</p>
+        <p class="text-gray-500 text-sm mb-0">Enforce multi-factor authentication</p>
+      </div>
+      <nz-switch [(ngModel)]="mfaEnforced"></nz-switch>
+    </div>
+
+  </ng-container>
+
+</nz-card>

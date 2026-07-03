@@ -1,0 +1,42 @@
+:host ::ng-deep .auth-tabs .ant-tabs-nav {
+  margin: 20px;
+  /* remove extra vertical spacing if any */
+}
+
+:host ::ng-deep .auth-tabs .ant-tabs-nav-list {
+  display: flex;
+  width: 100%;
+}
+
+:host ::ng-deep .auth-tabs .ant-tabs-tab {
+  flex: 1 1 50%;
+  max-width: 50%;
+  justify-content: center;
+  /* centers tab content horizontally */
+  margin: 0 !important;
+  /* remove default side margins */
+}
+
+:host ::ng-deep .auth-tabs .ant-tabs-tab-btn {
+  width: 100%;
+  text-align: center;
+  /* center the label text */
+}
+
+.logo-title {
+  color: #F00;
+  font-family: Roboto;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 22px;
+  /* 157.143% */
+}
+
+.top-heading {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  align-self: stretch;
+}

@@ -1,0 +1,177 @@
+<!-- role-management.component.html -->
+
+<div class="rm-page">
+  <!-- Header -->
+  <div class="section-wrap">
+    <div class="rm-header">
+      <div>
+        <h2 class="rm-title">Role management</h2>
+        <p class="rm-subtitle">
+          View, create and edit roles &amp; permissions for your Member &amp;
+          Team.
+          <a href="#" class="rm-link">Learn permission access Doc</a>
+        </p>
+      </div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="rm-toolbar">
+      <span class="rm-section-label">Roles</span>
+
+      <div class="rm-search-wrap">
+        <nz-input-group [nzPrefix]="searchIcon">
+          <input
+            nz-input
+            placeholder="search"
+            [(ngModel)]="searchText"
+            (ngModelChange)="onSearch()"
+          />
+        </nz-input-group>
+        <ng-template #searchIcon
+          ><span nz-icon nzType="search"></span
+        ></ng-template>
+      </div>
+
+      <!-- Role type filter -->
+      <div
+        nz-dropdown
+        [nzDropdownMenu]="filterMenu"
+        nzTrigger="click"
+        class="rm-filter-btn"
+      >
+        <button nz-button>
+          {{
+            filterType
+              ? filterType === "predefined"
+                ? "Predefined"
+                : "Custom"
+              : "role type"
+          }}
+          <span nz-icon nzType="down"></span>
+        </button>
+      </div>
+      <nz-dropdown-menu #filterMenu="nzDropdownMenu">
+        <ul nz-menu>
+          <li nz-menu-item (click)="setFilter('')">All</li>
+          <li nz-menu-item (click)="setFilter('predefined')">Predefined</li>
+          <li nz-menu-item (click)="setFilter('custom')">Custom</li>
+        </ul>
+      </nz-dropdown-menu>
+
+      <button
+        nz-button
+        nzType="primary"
+        class="rm-add-btn"
+        (click)="openCreate()"
+      >
+        <span nz-icon nzType="plus"></span> Add Role
+      </button>
+    </div>
+
+    <!-- Skeleton -->
+    @if (isLoading) {
+      <nz-skeleton [nzActive]="true" [nzParagraph]="{ rows: 6 }"></nz-skeleton>
+    }
+
+    <!-- Table -->
+    @if (!isLoading) {
+      <nz-table
+        #roleTable
+        [nzData]="filteredRoles"
+        [nzShowPagination]="false"
+        [nzBordered]="false"
+        nzSize="middle"
+        class="rm-table"
+      >
+        <thead>
+          <tr>
+            <th>Role Name</th>
+            <th>Role Type</th>
+            <th>Description</th>
+            <th></th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (role of roleTable.data; track role.roleId) {
+            <tr class="rm-row" (click)="openDetails(role)">
+              <td>{{ role.roleName }}</td>
+
+              <td>{{ getRoleTypeLabel(role) }}</td>
+
+              <td class="rm-desc">{{ role.description }}</td>
+
+              <!-- Three-dot menu -->
+              <td class="rm-action-cell" (click)="$event.stopPropagation()">
+                <div
+                  nz-dropdown
+                  [nzDropdownMenu]="role.isCustom ? customMenu : predefinedMenu"
+                  nzTrigger="click"
+                  nzPlacement="bottomRight"
+                  class="rm-dots"
+                >
+                  <span nz-icon nzType="more" nzTheme="outline"></span>
+                </div>
+
+                <!-- Predefined: Details only -->
+                <nz-dropdown-menu #predefinedMenu="nzDropdownMenu">
+                  <ul nz-menu>
+                    <li nz-menu-item (click)="openDetails(role)">Details</li>
+                    <li nz-menu-item (click)="cloneRole(role, $event)">
+                      Clone
+                    </li>
+                  </ul>
+                </nz-dropdown-menu>
+
+                <!-- Custom: Clone / Details / Delete / Modify -->
+                <nz-dropdown-menu #customMenu="nzDropdownMenu">
+                  <ul nz-menu>
+                    <li nz-menu-item (click)="cloneRole(role, $event)">
+                      Clone
+                    </li>
+                    <li nz-menu-item (click)="openDetails(role)">Details</li>
+                    <li
+                      nz-menu-item
+                      (click)="deleteRole(role, $event)"
+                      class="rm-danger-item"
+                    >
+                      Delete
+                    </li>
+                    <li nz-menu-item (click)="openEdit(role)">Modify</li>
+                  </ul>
+                </nz-dropdown-menu>
+              </td>
+
+              <!-- Chevron (to open sub-roles)-->
+              <td class="rm-chevron-cell">
+                <span
+                  nz-icon
+                  nzType="right"
+                  nzTheme="outline"
+                  class="rm-chevron"
+                ></span>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </nz-table>
+    }
+  </div>
+</div>
+
+<!-- Overlay panel -->
+@if (panelVisible) {
+  <div class="rm-overlay" (click)="closePanel()"></div>
+  <app-role-panel
+    [mode]="panelMode"
+    [role]="selectedRole"
+    (close)="closePanel()"
+    (roleCreated)="onRoleCreated($event)"
+    (roleUpdated)="onRoleUpdated($event)"
+    (roleDeleted)="onRoleDeleted($event)"
+    (roleCloned)="onRoleCloned($event)"
+  ></app-role-panel>
+}
+
+<!-- Confirmation dialog -->
+<app-confirmation #confirmDialog></app-confirmation>

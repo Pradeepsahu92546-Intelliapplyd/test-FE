@@ -1,0 +1,65 @@
+<div class="!px-[16px] !py-[16px]">
+  <nz-card class="rounded-2xl shadow-sm border-0">
+
+    <h2 class="text-lg font-semibold mb-1">Account Settings</h2>
+    <p class="text-gray-500 mb-6">Manage your account settings</p>
+
+    <!-- ── Email Address ── -->
+    <div class="py-6 px-6">
+      <app-email></app-email>
+    </div>
+
+    <!-- ── Account & User Type ── -->
+    <div class="py-6 px-6">
+      <div class="headings">
+        <h3 class="py-3">Account &amp; User Type</h3>
+        <p class="text-gray-500 mb-6">
+          Contact support if you want to change Account &amp; User Type
+        </p>
+
+        <!-- Skeleton while loading -->
+        <ng-container *ngIf="isLoading">
+          <div class="flex items-center justify-start gap-10">
+            <nz-skeleton-element
+              nzType="input"
+              [nzActive]="true"
+              class="w-1/3"
+              style="height:32px"
+            ></nz-skeleton-element>
+            <nz-skeleton-element
+              nzType="input"
+              [nzActive]="true"
+              class="w-1/3"
+              style="height:32px"
+            ></nz-skeleton-element>
+          </div>
+        </ng-container>
+
+        <!-- Actual values once loaded -->
+        <ng-container *ngIf="!isLoading">
+          <div class="flex items-center justify-start gap-10">
+            <input
+              type="text"
+              [value]="accountType"
+              disabled
+              class="w-1/3 border rounded px-2 py-1 bg-gray-100"
+            />
+            <input
+              type="text"
+              [value]="userType"
+              disabled
+              class="w-1/3 border rounded px-2 py-1 bg-gray-100"
+            />
+          </div>
+        </ng-container>
+
+      </div>
+    </div>
+
+    <!-- ── Account Management ── -->
+    <div class="py-6 px-6">
+      <app-account-management></app-account-management>
+    </div>
+
+  </nz-card>
+</div>

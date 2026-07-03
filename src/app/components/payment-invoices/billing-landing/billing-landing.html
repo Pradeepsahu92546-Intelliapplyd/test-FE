@@ -1,0 +1,13 @@
+<nz-tabs [(nzSelectedIndex)]="activeTab">
+  <!-- Billing Tab -->
+  <nz-tab nzTitle="Billing"> 
+    <app-billing-list></app-billing-list>
+  </nz-tab>
+
+  <nz-tab nzTitle="Invoices">
+    <app-invoices></app-invoices>
+  </nz-tab>
+  <nz-tab nzTitle="Transactions">
+    <app-transactions></app-transactions>
+  </nz-tab>
+</nz-tabs>

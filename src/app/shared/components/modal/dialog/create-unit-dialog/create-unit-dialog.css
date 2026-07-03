@@ -1,0 +1,16 @@
+label {
+  color: #333;
+  font-size: 14px;
+  display: block;
+  margin-bottom: 4px;
+}
+
+input,
+textarea {
+  border-radius: 4px;
+}
+
+/* Ensure the modal title looks like the design */
+:host ::ng-deep .ant-modal-title {
+  font-weight: 600;
+}

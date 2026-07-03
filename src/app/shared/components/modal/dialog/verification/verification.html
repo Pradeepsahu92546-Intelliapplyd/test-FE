@@ -1,0 +1,12 @@
+<nz-modal [(nzVisible)]="isVisible"  [nzTitle]="title"  (nzOnCancel)="handleCancel()" (nzOnOk)="handleOk()">
+    <ng-container *nzModalContent>
+        <p>We have jsut sent a verification code to pratyuhs@intelliapplyd.com</p>
+        <div class="otp-container">
+            <input nz-input maxlength="6" [(ngModel)]="otp" type="text"  />
+        </div>
+        <div class="otp-actions">
+            <a (click)="resendCode()">Resend Code</a>
+            <span>30s</span>
+        </div>
+    </ng-container>
+</nz-modal>

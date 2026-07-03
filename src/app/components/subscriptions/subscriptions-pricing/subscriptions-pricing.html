@@ -1,0 +1,56 @@
+<!-- Loader Overlay -->
+@if (loading()) {
+  <app-loader></app-loader>
+}
+
+<div class="min-h-screen bg-[#F5f5f5] ">
+    <div class="max-w-6xl mx-auto px-5 py-8 md:py-10">
+      <h1 class="text-[20px] md:text-2xl font-medium">Available Subscription Plans</h1>
+      <p class="text-gray-600 mt-2 text-sm">
+        Available plan as your requirement choosen from available plan
+      </p>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-1 mt-8">
+        <!-- Free -->
+        <app-subscription-card
+          title="Free"
+          [subtitle]="'Best for anyone who want to simple use'"
+          [showBillingToggle]="false"
+          [price]="null"
+          [features]="['benefit description', 'benefit description']"
+          [ctaText]="'Current plan'"
+          [ctaDisabled]="true"
+          (select)="onSelect('free')"
+        ></app-subscription-card>
+
+        <!-- Pro (Recommended) - Prepaid with price -->
+        <app-subscription-card
+          title="pro"
+          [subtitle]="'Description about pro plan'"
+          [recommended]="true"
+          [showBillingToggle]="true"
+          [showPrice]="true" 
+          [billing]="proBilling()"
+          [price]="proBilling() === 'monthly' ? 'XXXX' : 'XXXX*12'"
+          [features]="proFeatures"
+          [ctaText]="'Choose plan'"
+          (billingChange)="proBilling.set($event)"
+          (select)="onSelect('pro')"
+        ></app-subscription-card>
+
+        <!-- Pay as you go - Postpaid without price -->
+        <app-subscription-card
+          title="Pay as you go"
+          [subtitle]="'Description about pro plan'"
+          [showBillingToggle]="true"
+          [showPrice]="false" 
+          [billing]="paygBilling()"
+          [price]="null"  
+          [features]="paygFeatures"
+          [ctaText]="'Choose plan'"
+          (billingChange)="paygBilling.set($event)"
+          (select)="onSelect('payg')"
+        ></app-subscription-card>
+      </div>
+    </div>
+  </div>

@@ -1,0 +1,83 @@
+<nz-icon nzType="arrow-left" nzTheme="outline" class="arrow" (click)="goToInvoices()"></nz-icon>
+
+<div class="action-buttons">
+    <button nz-button nzType="primary">
+        <i nz-icon nzType="download"></i>
+        <span>Download PDF</span>
+    </button>
+
+    <button nz-button nzType="primary">
+        <i nz-icon nzType="share-alt"></i>
+        <span>Share Invoice</span>
+    </button>
+</div>
+
+<div class="invoice-container" id="invoice-container">
+    <div class="invoice-header">
+        <h2>Invoice</h2>
+        <div class="status">
+            Status: <span [ngClass]="invoice.status.toLowerCase()">{{ invoice.status }}</span>
+        </div>
+    </div>
+
+    <div class="invoice-meta">
+        <p><strong>Invoice ID:</strong> {{ invoice.invoice }}</p>
+        <p><strong>Invoice Date:</strong> {{ invoice.metadata.invoicedate }}</p>
+        <p><strong>Due Date:</strong> {{ invoice.metadata.dueDate }}</p>
+        <p><strong>Salesperson Name:</strong> {{ invoice.metadata.name}}</p>
+    </div>
+
+    <div class="address-section">
+        <div class="address-box">
+            <h4>Billing Address</h4>
+            <p><strong>Name:</strong> {{ invoice.metadata.name }}</p>
+            <p><strong>Address:</strong> {{ invoice.metadata.billingAddress.address }}</p>
+            <p><strong>City:</strong> {{ invoice.metadata.billingAddress.city}}</p>
+            <p><strong>State:</strong> {{ invoice.metadata.billingAddress.state }}</p>
+            <p><strong>Country:</strong> {{ invoice.metadata.billingAddress.country}}</p>
+        </div>
+
+        <div class="address-box">
+            <h4>Shipping Address</h4>
+            <p><strong>Name:</strong> {{ invoice.metadata.name }}</p>
+            <p><strong>Address:</strong> {{ invoice.metadata.shippingAddress.address }}</p>
+            <p><strong>City:</strong> {{ invoice.metadata.shippingAddress.city}}</p>
+            <p><strong>State:</strong> {{ invoice.metadata.shippingAddress.state }}</p>
+            <p><strong>Country:</strong> {{ invoice.metadata.shippingAddress.country}}</p>
+        </div>
+    </div>
+
+    <table class="invoice-table">
+        <thead>
+            <tr>
+                <th>Sl.No</th>
+                <th>Item Name</th>
+                <th>Description</th>
+                <th>Price</th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (item of invoice.metadata.item; track item.id) {
+                <tr>
+                    <td>{{ item.id }}</td>
+                    <td>{{ item.name }}</td>
+                    <td>{{ item.des }}</td>
+                    <td>₹{{ item.price }}</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <div class="totals">
+        <p><strong>Subtotal:</strong> ₹ 20000</p>
+        <p><strong>Tax:</strong> ₹ 100</p>
+        <p class="grand-total"><strong>Total:</strong> ₹ 20100</p>
+    </div>
+
+    @if (invoice.status === 'Paid') {
+        <div class="payment-mode">
+            <p><strong>Payment Mode:</strong> {{ invoice.metadata.paymentMode }}</p>
+            <p><strong>Card:</strong> {{ invoice.metadata.cardNumber }}</p>
+        </div>
+    }
+</div>

@@ -1,0 +1,19 @@
+.settings-container {
+    display: flex;
+    background: #fff;
+    padding: 24px;
+    border-radius: 12px;
+    height: 90vh;
+    justify-content: space-evenly;
+}
+
+.left-panel {
+    flex: 1;
+    padding: 20px;
+}
+
+.right-panel {
+    border-left: 1px solid rgb(240, 240, 240);
+    flex: 1;
+    padding: 20px;
+}

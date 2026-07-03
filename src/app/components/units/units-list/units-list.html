@@ -1,0 +1,749 @@
+<!-- units-list.html -->
+<div class="units-page">
+  <!-- ALL UNITS VIEW -->
+  @if (!isSingleUnit) {
+    <ng-container>
+      <!-- Tab Row + Filters + View Toggle -->
+      <div class="page-toolbar">
+        <div class="tab-row">
+          <!-- use nz-tabs instead of custom buttons -->
+          <nz-tabset
+            [nzSelectedIndex]="selectedTabIndex"
+            (nzSelectedIndexChange)="onTabIndexChange($event)"
+          >
+            <nz-tab nzTitle="All Units"></nz-tab>
+            <nz-tab nzTitle="My Units"></nz-tab>
+            <nz-tab nzTitle="Shared Units"></nz-tab>
+          </nz-tabset>
+        </div>
+
+        <div class="toolbar-right">
+          <!-- Status filter -->
+          <nz-select
+            [(ngModel)]="statusFilter"
+            nzPlaceHolder="Status"
+            nzAllowClear
+            class="filter-select"
+            data-testid="status-filter"
+          >
+            <nz-option nzValue="Active" nzLabel="Active"></nz-option>
+            <nz-option nzValue="Inactive" nzLabel="Inactive"></nz-option>
+          </nz-select>
+          <!-- Type filter -->
+          <nz-select
+            [(ngModel)]="typeFilter"
+            nzPlaceHolder="Type"
+            nzAllowClear
+            class="filter-select"
+            data-testid="type-filter"
+          >
+            <nz-option nzValue="Owned" nzLabel="Owned"></nz-option>
+            <nz-option nzValue="Shared" nzLabel="Shared"></nz-option>
+          </nz-select>
+          <!-- View toggle -->
+          <div class="view-toggle">
+            <button
+              class="vt-btn"
+              [class.active]="viewMode === 'list'"
+              (click)="setView('list')"
+              nz-tooltip
+              nzTooltipTitle="List view"
+              data-testid="list-view-button"
+            >
+              <span nz-icon nzType="unordered-list" nzTheme="outline"></span>
+            </button>
+            <button
+              class="vt-btn"
+              [class.active]="viewMode === 'grid'"
+              (click)="setView('grid')"
+              nz-tooltip
+              nzTooltipTitle="Grid view"
+              data-testid="grid-view-button"
+            >
+              <span nz-icon nzType="appstore" nzTheme="outline"></span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── UNITS SECTION ── -->
+      <div class="section-wrap">
+        <div class="section-header">
+          <h3 class="section-title">
+            {{
+              activeTab === "all"
+                ? "Units"
+                : activeTab === "my"
+                  ? "My Units"
+                  : "Shared Units"
+            }}
+          </h3>
+          <nz-input-group [nzPrefix]="searchIcon" class="section-search">
+            <input
+              nz-input
+              [(ngModel)]="unitSearch"
+              placeholder="search"
+              data-testid="search-input"
+            />
+          </nz-input-group>
+          <ng-template #searchIcon
+            ><span
+              nz-icon
+              nzType="search"
+              nzTheme="outline"
+              style="color: #aaa"
+            ></span
+          ></ng-template>
+          <button
+            nz-button
+            nzType="primary"
+            class="create-btn"
+            (click)="createUnit()"
+            data-testid="create-unit-button"
+          >
+            <span nz-icon nzType="plus" nzTheme="outline"></span> Create New
+          </button>
+        </div>
+
+        <!-- LIST VIEW -->
+        <ng-container *ngIf="viewMode === 'list'">
+          <nz-table
+            [nzData]="filteredUnits"
+            nzSize="small"
+            [nzShowPagination]="false"
+            class="data-table"
+            data-testid="units-table"
+          >
+            <thead>
+              <tr>
+                <th nzWidth="40px"><label nz-checkbox></label></th>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Status</th>
+                <th>Type</th>
+                <th>Default</th>
+                <th>Created at</th>
+                <th nzWidth="80px"></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let unit of filteredUnits">
+                <td><label nz-checkbox [(ngModel)]="unit.checked"></label></td>
+                <td>
+                  <div class="name-cell">
+                    <span class="row-name">{{ unit.name }}</span>
+                  </div>
+                </td>
+                <td class="desc-cell">{{ unit.description }}</td>
+                <td>
+                  <span
+                    class="status-dot"
+                    [class.active]="unit.status === 'Active'"
+                  ></span>
+                  {{ unit.status }}
+                </td>
+                <td>{{ unit.type }}</td>
+                <td>{{ unit.isDefault ? "Yes" : "No" }}</td>
+                <td>{{ unit.createdAt }}</td>
+                <td class="action-cell">
+                  <!-- Three-dot menu -->
+                  <span
+                    nz-dropdown
+                    [nzDropdownMenu]="unitMenu"
+                    nzTrigger="click"
+                    class="three-dot"
+                    data-testid="three-dot-menu"
+                  >
+                    <span nz-icon nzType="more" nzTheme="outline"></span>
+                  </span>
+                  <nz-dropdown-menu #unitMenu="nzDropdownMenu">
+                    <ul nz-menu class="action-menu" data-testid="action-menu">
+                      <!-- Always shown -->
+                      <li
+                        nz-menu-item
+                        (click)="doUnitAction('details', unit)"
+                        data-testid="menu-details"
+                      >
+                        Details
+                      </li>
+                      @if (unit.status === "Active") {
+                        <li
+                          nz-menu-item
+                          class=""
+                          (click)="doUnitAction('permissions', unit)"
+                          data-testid="menu-permissions"
+                        >
+                          Permissions
+                        </li>
+                      }
+
+                      @if (unit.status === "Active") {
+                        <li
+                          nz-menu-item
+                          (click)="doUnitAction('edit', unit)"
+                          data-testid="menu-edit"
+                        >
+                          Edit
+                        </li>
+                      }
+
+                      @if (unit.status === "Active") {
+                        <li
+                          nz-menu-item
+                          (click)="doUnitAction('toggle', unit)"
+                          data-testid="menu-toggle"
+                        >
+                          Mark as Inactive
+                        </li>
+                      }
+
+                      <!-- Inactive only -->
+                      @if (unit.status === "Inactive") {
+                        <li
+                          nz-menu-item
+                          (click)="doUnitAction('toggle', unit)"
+                          data-testid="menu-toggle"
+                        >
+                          Mark as Active
+                        </li>
+                      }
+                      @if (unit.status === "Inactive") {
+                        <li
+                          nz-menu-item
+                          class="delete-item"
+                          (click)="doUnitAction('delete', unit)"
+                          data-testid="menu-delete"
+                        >
+                          Delete
+                        </li>
+                      }
+                    </ul>
+                  </nz-dropdown-menu>
+                  <!-- Navigate arrow -->
+                  <button class="nav-arrow" (click)="openUnit(unit)">
+                    <span nz-icon nzType="right" nzTheme="outline"></span>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </nz-table>
+        </ng-container>
+
+        <!-- GRID VIEW -->
+        @if (viewMode === "grid") {
+          <ng-container>
+            <div class="grid-container units-grid" data-testid="units-grid">
+              <div
+                class="grid-card"
+                *ngFor="let unit of filteredUnits"
+                (click)="openUnit(unit)"
+              >
+                <div class="card-top">
+                  <span
+                    nz-icon
+                    nzType="code-sandbox"
+                    nzTheme="outline"
+                    class="card-icon"
+                  ></span>
+                  <span
+                    nz-dropdown
+                    [nzDropdownMenu]="unitGridMenu"
+                    nzTrigger="click"
+                    class="three-dot card-three-dot"
+                    (click)="$event.stopPropagation()"
+                    data-testid="grid-three-dot-menu"
+                  >
+                    <span nz-icon nzType="more" nzTheme="outline"></span>
+                  </span>
+                  <nz-dropdown-menu #unitGridMenu="nzDropdownMenu">
+                    <ul
+                      nz-menu
+                      class="action-menu"
+                      data-testid="grid-action-menu"
+                    >
+                      <li
+                        nz-menu-item
+                        (click)="doUnitAction('details', unit)"
+                        data-testid="grid-menu-details"
+                      >
+                        Details
+                      </li>
+                      @if (unit.status === "Active") {
+                        <li
+                          nz-menu-item
+                          class=""
+                          (click)="doUnitAction('permissions', unit)"
+                          data-testid="menu-permissions"
+                        >
+                          Permissions
+                        </li>
+                      }
+
+                      @if (unit.status === "Active") {
+                        <li
+                          nz-menu-item
+                          (click)="doUnitAction('edit', unit)"
+                          data-testid="grid-menu-edit"
+                        >
+                          Edit
+                        </li>
+                      }
+
+                      @if (unit.status === "Active") {
+                        <li
+                          nz-menu-item
+                          (click)="doUnitAction('toggle', unit)"
+                          data-testid="grid-menu-toggle"
+                        >
+                          Mark as Inactive
+                        </li>
+                      }
+                      @if (unit.status === "Inactive") {
+                        <li
+                          nz-menu-item
+                          (click)="doUnitAction('toggle', unit)"
+                          data-testid="grid-menu-toggle"
+                        >
+                          Mark as Active
+                        </li>
+                      }
+                      @if (unit.status === "Inactive") {
+                        <li
+                          nz-menu-item
+                          class="delete-item"
+                          (click)="doUnitAction('delete', unit)"
+                          data-testid="grid-menu-delete"
+                        >
+                          Delete
+                        </li>
+                      }
+                    </ul>
+                  </nz-dropdown-menu>
+                </div>
+                <div class="card-name">{{ unit.name }}</div>
+                <div class="card-sub">
+                  Id : Unit-{{ unit.id.substring(0, 2).toUpperCase() }}
+                </div>
+                <div class="card-footer">
+                  <span class="card-systems">
+                    <span nz-icon nzType="appstore" nzTheme="outline"></span>
+                    {{ unit.systemCount }} Systems
+                  </span>
+                  <span class="card-type">
+                    <span nz-icon nzType="user" nzTheme="outline"></span>
+                    {{ unit.type }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </ng-container>
+        }
+      </div>
+
+      <!-- ── SYSTEMS SECTION ── -->
+      <div class="section-wrap">
+        <div class="section-header">
+          <h3 class="section-title">
+            {{ viewMode === "grid" ? "All Systems" : "Systems" }}
+          </h3>
+          <nz-input-group [nzPrefix]="sysSearchIcon" class="section-search">
+            <input nz-input [(ngModel)]="systemSearch" placeholder="search" />
+          </nz-input-group>
+          <ng-template #sysSearchIcon
+            ><span
+              nz-icon
+              nzType="search"
+              nzTheme="outline"
+              style="color: #aaa"
+            ></span
+          ></ng-template>
+          <button
+            nz-button
+            nzType="primary"
+            class="create-btn"
+            (click)="createSystem()"
+          >
+            <span nz-icon nzType="plus" nzTheme="outline"></span> Create System
+          </button>
+        </div>
+
+        <!-- LIST VIEW -->
+        @if (viewMode === "list") {
+          <ng-container>
+            <nz-table
+              [nzData]="filteredSystems"
+              nzSize="small"
+              [nzShowPagination]="false"
+              class="data-table"
+            >
+              <thead>
+                <tr>
+                  <th nzWidth="40px"><label nz-checkbox></label></th>
+                  <th>Name</th>
+                  <th>Unit</th>
+                  <th>Description</th>
+                  <th>Status</th>
+                  <th>Type</th>
+                  <th>Created at</th>
+                  <th nzWidth="80px"></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let sys of filteredSystems">
+                  <td><label nz-checkbox [(ngModel)]="sys.checked"></label></td>
+                  <td>
+                    <div class="name-cell">
+                      <span class="row-name">{{ sys.name }}</span>
+                      <span class="row-sub">{{ sys.systemCode }}</span>
+                    </div>
+                  </td>
+                  <td>{{ sys.unitName }}</td>
+                  <td class="desc-cell">{{ sys.description }}</td>
+                  <td>
+                    <span
+                      class="status-dot"
+                      [class.active]="sys.status === 'Active'"
+                    ></span>
+                    {{ sys.status }}
+                  </td>
+                  <td>{{ sys.type }}</td>
+                  <td>{{ sys.createdAt }}</td>
+                  <td class="action-cell">
+                    <span
+                      nz-dropdown
+                      [nzDropdownMenu]="sysMenu"
+                      nzTrigger="click"
+                      class="three-dot"
+                    >
+                      <span nz-icon nzType="more" nzTheme="outline"></span>
+                    </span>
+                    <nz-dropdown-menu #sysMenu="nzDropdownMenu">
+                      <ul nz-menu class="action-menu">
+                        <li nz-menu-item (click)="doSystemAction('edit', sys)">
+                          Edit
+                        </li>
+                        <li
+                          nz-menu-item
+                          (click)="doSystemAction('details', sys)"
+                        >
+                          Details
+                        </li>
+                        <li
+                          nz-menu-item
+                          (click)="doSystemAction('toggle', sys)"
+                        >
+                          Active / inactive
+                        </li>
+                        <li
+                          nz-menu-item
+                          class="delete-item"
+                          (click)="doSystemAction('delete', sys)"
+                        >
+                          Delete
+                        </li>
+                      </ul>
+                    </nz-dropdown-menu>
+                    <button class="nav-arrow">
+                      <span nz-icon nzType="right" nzTheme="outline"></span>
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </nz-table>
+          </ng-container>
+        }
+
+        <!-- GRID VIEW -->
+        @if (viewMode === "grid") {
+          <ng-container>
+            <div class="grid-container systems-grid">
+              <div class="system-card" *ngFor="let sys of filteredSystems">
+                <div class="sys-card-top">
+                  <span
+                    nz-icon
+                    nzType="appstore-add"
+                    nzTheme="outline"
+                    class="sys-card-icon"
+                  ></span>
+                  <span
+                    class="sys-status-dot"
+                    [class.active]="sys.status === 'Active'"
+                  ></span>
+                  <span class="sys-status-label">{{ sys.status }}</span>
+                  <span
+                    nz-dropdown
+                    [nzDropdownMenu]="sysGridMenu"
+                    nzTrigger="click"
+                    class="three-dot sys-three-dot"
+                    (click)="$event.stopPropagation()"
+                  >
+                    <span nz-icon nzType="more" nzTheme="outline"></span>
+                  </span>
+                  <nz-dropdown-menu #sysGridMenu="nzDropdownMenu">
+                    <ul nz-menu class="action-menu">
+                      <li nz-menu-item (click)="doSystemAction('edit', sys)">
+                        Edit
+                      </li>
+                      <li nz-menu-item (click)="doSystemAction('details', sys)">
+                        Details
+                      </li>
+                      <li nz-menu-item (click)="doSystemAction('toggle', sys)">
+                        Active / inactive
+                      </li>
+                      <li
+                        nz-menu-item
+                        class="delete-item"
+                        (click)="doSystemAction('delete', sys)"
+                      >
+                        Delete
+                      </li>
+                    </ul>
+                  </nz-dropdown-menu>
+                </div>
+                <div class="sys-card-name">{{ sys.name }}</div>
+                <div class="sys-card-sub">Id : {{ sys.systemCode }}</div>
+                <div class="sys-card-footer">
+                  <span
+                    ><span
+                      nz-icon
+                      nzType="clock-circle"
+                      nzTheme="outline"
+                    ></span>
+                    {{ sys.createdAt }}</span
+                  >
+                  <span
+                    ><span nz-icon nzType="cluster" nzTheme="outline"></span>
+                    {{ sys.unitName }}</span
+                  >
+                  <span
+                    ><span nz-icon nzType="user" nzTheme="outline"></span>
+                    {{ sys.type }}</span
+                  >
+                </div>
+              </div>
+            </div>
+          </ng-container>
+        }
+      </div>
+    </ng-container>
+  }
+
+  <!--  SINGLE UNIT VIEW-->
+  @if (isSingleUnit) {
+    <ng-container>
+      <!-- Header row -->
+      <div class="single-header">
+        <h2 class="single-title">
+          {{ singleUnitName }} ({{ singleUnitData?.type ?? "Owned" }})
+        </h2>
+        <div class="toolbar-right">
+          <nz-select
+            [(ngModel)]="statusFilter"
+            nzPlaceHolder="Status"
+            nzAllowClear
+            class="filter-select"
+          >
+            <nz-option nzValue="Active" nzLabel="Active"></nz-option>
+            <nz-option nzValue="Inactive" nzLabel="Inactive"></nz-option>
+          </nz-select>
+          <nz-select
+            [(ngModel)]="typeFilter"
+            nzPlaceHolder="Type"
+            nzAllowClear
+            class="filter-select"
+          >
+            <nz-option nzValue="Owned" nzLabel="Owned"></nz-option>
+            <nz-option nzValue="Shared" nzLabel="Shared"></nz-option>
+          </nz-select>
+          <div class="view-toggle">
+            <button
+              class="vt-btn"
+              [class.active]="viewMode === 'list'"
+              (click)="setView('list')"
+            >
+              <span nz-icon nzType="unordered-list" nzTheme="outline"></span>
+            </button>
+            <button
+              class="vt-btn"
+              [class.active]="viewMode === 'grid'"
+              (click)="setView('grid')"
+            >
+              <span nz-icon nzType="appstore" nzTheme="outline"></span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Single Unit table -->
+      <div class="section-wrap">
+        <div class="section-header">
+          <h3 class="section-title">Unit</h3>
+          <button
+            nz-button
+            nzType="primary"
+            class="create-btn"
+            (click)="createUnit()"
+          >
+            <span nz-icon nzType="plus" nzTheme="outline"></span> Create New
+          </button>
+        </div>
+        <nz-table
+          [nzData]="singleUnitData ? [singleUnitData] : []"
+          nzSize="small"
+          [nzShowPagination]="false"
+          class="data-table"
+        >
+          <thead>
+            <tr>
+              <th nzWidth="40px"><label nz-checkbox></label></th>
+              <th>Name</th>
+              <th>Description</th>
+              <th>Status</th>
+              <th>Type</th>
+              <th>Created at</th>
+              <th nzWidth="80px"></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngIf="singleUnitData">
+              <td><label nz-checkbox></label></td>
+              <td>
+                <div class="name-cell">
+                  <span class="row-name">{{ singleUnitData.name }}</span>
+                </div>
+              </td>
+              <td>{{ singleUnitData.description }}</td>
+              <td>
+                <span
+                  class="status-dot"
+                  [class.active]="singleUnitData.status === 'Active'"
+                ></span>
+                {{ singleUnitData.status }}
+              </td>
+              <td>{{ singleUnitData.type }}</td>
+              <td>{{ singleUnitData.createdAt }}</td>
+              <td class="action-cell">
+                <span
+                  nz-dropdown
+                  [nzDropdownMenu]="suMenu"
+                  nzTrigger="click"
+                  class="three-dot"
+                >
+                  <span nz-icon nzType="more" nzTheme="outline"></span>
+                </span>
+                <nz-dropdown-menu #suMenu="nzDropdownMenu">
+                  <ul nz-menu class="action-menu">
+                    <li nz-menu-item class="">Permissions</li>
+                    <li nz-menu-item>Edit</li>
+                    <li nz-menu-item>Details</li>
+                    <li nz-menu-item>Active / inactive</li>
+                    <li nz-menu-item class="delete-item">Delete</li>
+                  </ul>
+                </nz-dropdown-menu>
+                <button class="nav-arrow">
+                  <span nz-icon nzType="right" nzTheme="outline"></span>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </nz-table>
+      </div>
+
+      <!-- Systems of this unit -->
+      <div class="section-wrap">
+        <div class="section-header">
+          <h3 class="section-title">Systems</h3>
+          <nz-input-group [nzPrefix]="sysSearchIcon2" class="section-search">
+            <input nz-input [(ngModel)]="systemSearch" placeholder="search" />
+          </nz-input-group>
+          <ng-template #sysSearchIcon2
+            ><span
+              nz-icon
+              nzType="search"
+              nzTheme="outline"
+              style="color: #aaa"
+            ></span
+          ></ng-template>
+        </div>
+        <nz-table
+          [nzData]="singleUnitSystems"
+          nzSize="small"
+          [nzShowPagination]="false"
+          class="data-table"
+        >
+          <thead>
+            <tr>
+              <th nzWidth="40px"><label nz-checkbox></label></th>
+              <th>Name</th>
+              <th>Description</th>
+              <th>Status</th>
+              <th>Type</th>
+              <th>Created at</th>
+              <th nzWidth="80px"></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let sys of singleUnitSystems">
+              <td><label nz-checkbox [(ngModel)]="sys.checked"></label></td>
+              <td>
+                <div class="name-cell">
+                  <span class="row-name">{{ sys.name }}</span>
+                  <span class="row-sub">{{ sys.systemCode }}</span>
+                </div>
+              </td>
+              <td>{{ sys.description }}</td>
+              <td>
+                <span
+                  class="status-dot"
+                  [class.active]="sys.status === 'Active'"
+                ></span>
+                {{ sys.status }}
+              </td>
+              <td>{{ sys.type }}</td>
+              <td>{{ sys.createdAt }}</td>
+              <td class="action-cell">
+                <span
+                  nz-dropdown
+                  [nzDropdownMenu]="suSysMenu"
+                  nzTrigger="click"
+                  class="three-dot"
+                >
+                  <span nz-icon nzType="more" nzTheme="outline"></span>
+                </span>
+                <nz-dropdown-menu #suSysMenu="nzDropdownMenu">
+                  <ul nz-menu class="action-menu">
+                    <li nz-menu-item>Edit</li>
+                    <li nz-menu-item>Details</li>
+                    <li nz-menu-item>Active / inactive</li>
+                    <li nz-menu-item class="delete-item">Delete</li>
+                  </ul>
+                </nz-dropdown-menu>
+                <button class="nav-arrow">
+                  <span nz-icon nzType="right" nzTheme="outline"></span>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </nz-table>
+      </div>
+    </ng-container>
+  }
+
+  <!-- Create/Edit Unit Dialog -->
+  <app-create-unit-dialog
+    #createUnitDialog
+    (confirmed)="onUnitDialogConfirmed($event)"
+  ></app-create-unit-dialog>
+
+  <!-- Edit Unit Dialog -->
+  <app-edit-unit-dialog
+    #editUnitDialog
+    (updated)="onUnitEditConfirmed($event)"
+  ></app-edit-unit-dialog>
+</div>
+
+<!-- Shared confirmation dialog instance -->
+<app-confirmation
+  #confirmDialog
+  (confirmed)="onConfirmedDelete()"
+></app-confirmation>

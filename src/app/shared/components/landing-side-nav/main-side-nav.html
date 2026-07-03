@@ -1,0 +1,62 @@
+<aside class="side-nav" [class.collapsed]="isCollapsed">
+  <app-user-header [isCollapsed]="isCollapsed"></app-user-header>
+  <app-unit-selector [isCollapsed]="isCollapsed" (unitSelected)="onUnitSelected($event)"
+    (systemSelected)="onSystemSelected($event)"></app-unit-selector>
+
+  <div class="spacer"></div>
+
+  <!-- UPGRADE BANNER  (hidden when collapsed)-->
+
+  @if (!isCollapsed) {
+  <div class="upgrade-banner">
+    <div class="upgrade-icon-wrap">
+      <span nz-icon nzType="upload" nzTheme="outline" class="upgrade-icon"></span>
+    </div>
+    <p class="upgrade-text">Upgrade plan with unlimited usages</p>
+    <button nz-button class="view-plans-btn" data-testid="view-plans-button">View plans</button>
+  </div>
+  }
+
+  <!-- Collapsed: rocket icon as upgrade hint -->
+  @if (isCollapsed) {
+  <div class="icon-only-row upgrade-collapsed" nz-tooltip nzTooltipTitle="Upgrade plan" nzTooltipPlacement="right">
+    <span nz-icon nzType="rocket" nzTheme="outline" class="collapsed-icon" style="color: #6c63ff"></span>
+  </div>
+  }
+
+  <!-- BOTTOM MENU -->
+  <nz-divider style="margin: 4px 0"></nz-divider>
+
+  <ul nz-menu nzMode="inline" [nzInlineCollapsed]="isCollapsed" class="bottom-menu">
+    <li nz-menu-item nz-tooltip [nzTooltipTitle]="isCollapsed ? 'Upload File' : ''" nzTooltipPlacement="right" data-testid="menu-item-upload">
+      <span nz-icon nzType="cloud-upload" nzTheme="outline"></span>
+      @if (!isCollapsed) {
+      <span>Upload File</span>
+      }
+    </li>
+    <li nz-menu-item (click)="navigateToAccountSettings()" nz-tooltip [nzTooltipTitle]="isCollapsed ? 'Accounts' : ''"
+      nzTooltipPlacement="right" data-testid="menu-item-accounts">
+      <span nz-icon nzType="setting" nzTheme="outline"></span>
+      @if (!isCollapsed) {
+      <span>Accounts</span>
+      }
+    </li>
+    <li nz-menu-item (click)="navigateToUnitManager()" nz-tooltip [nzTooltipTitle]="isCollapsed ? 'Manage' : ''"
+      nzTooltipPlacement="right" data-testid="menu-item-manage">
+      <span nz-icon nzType="tool" nzTheme="outline"></span>
+      @if (!isCollapsed) {
+      <span>Manage</span>
+      }
+    </li>
+  </ul>
+
+  <!-- ───────────────────────────────────────────
+       COLLAPSE TRIGGER  (always visible at bottom)
+  ─────────────────────────────────────────────── -->
+  <div class="collapse-trigger" (click)="toggleCollapse()" data-testid="collapsed-sidenav">
+    <span nz-icon [nzType]="isCollapsed ? 'menu-unfold' : 'menu-fold'" nzTheme="outline" class="trigger-icon"></span>
+    @if (!isCollapsed) {
+    <span class="trigger-label">Collapse</span>
+    }
+  </div>
+</aside>

@@ -1,0 +1,124 @@
+<!-- UNITS SELECTOR  (hidden when collapsed)-->
+@if (!isCollapsed) {
+  <div class="units-selector">
+    <a nz-dropdown nzTrigger="click" [nzDropdownMenu]="unitMenu">
+      <div class="unit-badge">
+        <nz-avatar
+          nzSize="small"
+          nzText="U"
+          style="background-color: #6c63ff; color: #fff; font-size: 11px"
+        ></nz-avatar>
+        <span class="unit-label">{{ getSelectedUnitLabel() }}</span>
+        <span nz-icon nzType="down" nzTheme="outline" class="arrow-icon"></span>
+      </div>
+    </a>
+    <nz-dropdown-menu #unitMenu="nzDropdownMenu">
+      <ul nz-menu>
+        <li nz-menu-item (click)="onUnitFilterChange('all')">
+          <span [class.font-bold]="selectedUnitFilter === 'all'">All units</span>
+        </li>
+        <li nz-menu-divider></li>
+        @for (unit of units; track unit.id) {
+          <li nz-menu-item (click)="onUnitFilterChange(unit.id)">
+            <span [class.font-bold]="selectedUnitFilter === unit.id">{{ unit.name }}</span>
+          </li>
+        }
+      </ul>
+    </nz-dropdown-menu>
+  </div>
+}
+
+<!-- Collapsed: centered unit avatar -->
+@if (isCollapsed) {
+  <div
+    class="units-selector-collapsed"
+    nz-tooltip
+    nzTooltipTitle="All units"
+    nzTooltipPlacement="right"
+  >
+    <nz-avatar
+      nzSize="small"
+      nzText="U"
+      style="background-color: #6c63ff; color: #fff; font-size: 11px"
+    ></nz-avatar>
+  </div>
+}
+
+<!-- SEARCH  (hidden when collapsed)-->
+@if (!isCollapsed) {
+  <div class="search-box">
+    <nz-input-group [nzPrefix]="searchPrefix">
+      <input nz-input placeholder="Search units & systems" [(ngModel)]="searchTerm" (input)="onSearchChange()" />
+    </nz-input-group>
+    <ng-template #searchPrefix>
+      <span
+        nz-icon
+        nzType="search"
+        nzTheme="outline"
+        style="color: #aaa"
+      ></span>
+    </ng-template>
+  </div>
+}
+
+<!-- Collapsed: search icon only -->
+@if (isCollapsed) {
+  <div
+    class="icon-only-row"
+    nz-tooltip
+    nzTooltipTitle="Search"
+    nzTooltipPlacement="right"
+  >
+    <span
+      nz-icon
+      nzType="search"
+      nzTheme="outline"
+      class="collapsed-icon"
+    ></span>
+  </div>
+}
+
+<!--   TABS  (hidden when collapsed)-->
+@if (!isCollapsed) {
+  <nz-tabs
+  nzSize="small"  
+    [nzSelectedIndex]="getTabIndex(selectedTab)" 
+    (nzSelectedIndexChange)="onTabIndexChange($event)"
+    class="!px-[10px] !pb-0"
+  >
+    <nz-tab [nzTitle]="titleAll" >
+      <ng-template #titleAll>
+        All <span class="tab-count">({{ getTabCount('all') }})</span>
+      </ng-template>
+    </nz-tab>
+
+    <nz-tab [nzTitle]="titleOwned">
+      <ng-template #titleOwned>
+        Owned <span class="tab-count">({{ getTabCount('owned') }})</span>
+      </ng-template>
+    </nz-tab>
+
+    <nz-tab [nzTitle]="titleShared">
+      <ng-template #titleShared>
+        Shared <span class="tab-count">({{ getTabCount('shared') }})</span>
+      </ng-template>
+    </nz-tab>
+  </nz-tabs>
+}
+
+
+@if (!isCollapsed) {
+    <nz-divider class="all-units-label" nzText="All available units"></nz-divider>
+
+}
+
+<!--  TREE  (hidden when collapsed)-->
+@if (!isCollapsed) {
+  <nz-tree
+    [nzData]="treeNodes"
+    [nzExpandedKeys]="expandedKeys"
+    nzShowIcon
+    (nzClick)="onNodeClick($event)"
+    class="unit-tree"
+  ></nz-tree>
+}

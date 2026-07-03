@@ -1,0 +1,26 @@
+<nz-modal
+ [(nzVisible)]="isVisible"
+ [nzTitle]="title" 
+ [nzOkText]="okText"
+ [nzCancelText]="cancelText"
+ (nzOnCancel)="handleCancel()"
+ (nzOnOk)="handleOk()">
+    <ng-container *nzModalContent>
+    <p>{{ content }}</p>
+    <form [formGroup]="emailForm">
+        <label for="">Enter Email</label>
+      <input nz-input placeholder="Enter Email Address" formControlName="email" />
+      <div
+        *ngIf="submitted && emailForm.get('email')?.invalid"
+        class="text-red-600 mt-1 text-sm"
+      >
+        {{ getEmailErrorTip() }}
+      </div>
+      <div class="mt-2">
+        <label nz-checkbox formControlName="isDefault">
+          <span>Set as default</span>
+        </label>
+      </div>
+    </form>
+  </ng-container>
+</nz-modal>

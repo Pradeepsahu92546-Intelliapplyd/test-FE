@@ -1,0 +1,28 @@
+<app-upi-dialog
+ [title]="'UPI'"
+ [content]="'Enter your existing upi id'"
+ [okText]="'Add'"
+ [cancelText]="'Cancel'"
+ (confirmed)="handelOnOUpi($event)">
+</app-upi-dialog>
+
+<nz-card class="upi-card">
+  <p class="subtitle" *ngIf="!upiList || upiList.length === 0;else savedUpiList">No saved Upi. Please add one..</p>
+
+  <ng-template #savedUpiList>
+    <h4>Saved Upi</h4>
+    <label
+      nz-radio
+      *ngFor="let upi of upiList"
+      [(ngModel)]="selectedUpi"
+      [nzValue]="upi"
+      class="upi-option"
+    >
+      {{ upi }}
+    </label>
+  </ng-template>
+
+  <button nz-button nzType="primary" class="add-btn" (click)="addUpi()">
+    Add UPI
+  </button>
+</nz-card>

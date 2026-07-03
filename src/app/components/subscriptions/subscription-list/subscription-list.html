@@ -1,0 +1,194 @@
+<!-- subscription-list.html -->
+<div class="sub-page">
+
+  <!--
+       TOOLBAR
+    -->
+  <div class="toolbar">
+    <div class="toolbar-left">
+      <!-- Search -->
+      <nz-input-group [nzPrefix]="searchIcon" class="search-input">
+        <input
+          nz-input
+          [(ngModel)]="searchText"
+          (ngModelChange)="onSearchChange()"
+          placeholder="Search by Unit, subscription ID, or plan"
+        />
+      </nz-input-group>
+      <ng-template #searchIcon>
+        <span nz-icon nzType="search" nzTheme="outline" style="color:#bbb"></span>
+      </ng-template>
+
+      <!-- Status filter -->
+      <nz-select
+        [(ngModel)]="statusFilter"
+        (ngModelChange)="onStatusChange()"
+        class="status-select"
+      >
+        <nz-option
+          *ngFor="let opt of STATUS_OPTIONS"
+          [nzValue]="opt.value"
+          [nzLabel]="opt.label"
+        ></nz-option>
+      </nz-select>
+    </div>
+
+    <button nz-button nzType="primary" class="new-btn" (click)="newSubscription()">
+      <span nz-icon nzType="plus" nzTheme="outline"></span>
+      New Subscriptions
+    </button>
+  </div>
+
+  <!--
+       TABLE  — never resizes, drawer floats above it
+    -->
+  <div class="table-wrap">
+    <nz-table
+      [nzData]="filteredSubscriptions"
+      nzSize="middle"
+      [nzPageSize]="pageSize"
+      [(nzPageIndex)]="pageIndex"
+      [nzShowTotal]="totalTpl"
+      [nzFrontPagination]="true"
+      class="sub-table"
+    >
+      <ng-template #totalTpl let-total>
+        Total {{ total }} subscriptions
+      </ng-template>
+
+      <thead>
+        <tr>
+          <th>Unit</th>
+          <th>Subscription ID</th>
+          <th>Plan</th>
+          <th>Status</th>
+          <th nzSortOrder="null" [nzSortFn]="true">Amount</th>
+          <th nzSortOrder="null" [nzSortFn]="true">Start Date</th>
+          <th nzSortOrder="null" [nzSortFn]="true">Next Billing</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr *ngFor="let sub of filteredSubscriptions">
+          <td class="unit-cell">{{ sub.unit }}</td>
+          <td class="mono">{{ sub.subscriptionId }}</td>
+          <td>
+            <div class="plan-cell">
+              <span class="plan-name">{{ sub.plan }}</span>
+              <span class="plan-code">{{ sub.planCode }}</span>
+            </div>
+          </td>
+          <td>
+            <nz-tag [nzColor]="statusColor(sub.status)" class="status-tag">
+              {{ statusLabel(sub.status) }}
+            </nz-tag>
+          </td>
+          <td class="amount-cell">{{ formatAmount(sub.amount) }}</td>
+          <td>{{ sub.startDate }}</td>
+          <td>{{ sub.nextBilling }}</td>
+          <td>
+            <span
+              nz-dropdown
+              [nzDropdownMenu]="actionMenu"
+              nzTrigger="click"
+              nzPlacement="bottomRight"
+              class="three-dot"
+              (mousedown)="selectedSub = sub"
+            >
+              <span nz-icon nzType="ellipsis" nzTheme="outline"></span>
+            </span>
+          </td>
+        </tr>
+      </tbody>
+    </nz-table>
+  </div>
+
+  <!-- Shared action dropdown -->
+  <nz-dropdown-menu #actionMenu="nzDropdownMenu">
+    <ul nz-menu class="action-menu" *ngIf="selectedSub">
+      <li nz-menu-item (click)="openDetails(selectedSub!)">
+        <span nz-icon nzType="file-text" nzTheme="outline"></span> Details
+      </li>
+      <li nz-menu-item (click)="openActivities(selectedSub!)">
+        <span nz-icon nzType="history" nzTheme="outline"></span> Recent Activities
+      </li>
+      <li nz-menu-item (click)="onUpgrade(selectedSub!)">
+        <span nz-icon nzType="rocket" nzTheme="outline"></span> Upgrade
+      </li>
+      <li nz-menu-divider></li>
+      <li nz-menu-item
+          *ngIf="canCancel(selectedSub!)"
+          (click)="onCancel(selectedSub!)"
+          class="cancel-item">
+        <span nz-icon nzType="stop" nzTheme="outline"></span> Cancel
+      </li>
+      <li nz-menu-item
+          *ngIf="canReactivate(selectedSub!)"
+          (click)="onReactivate(selectedSub!)"
+          class="reactivate-item">
+        <span nz-icon nzType="redo" nzTheme="outline"></span> Reactivate
+      </li>
+      <li nz-menu-item
+          *ngIf="canDelete(selectedSub!)"
+          (click)="onDelete(selectedSub!)"
+          class="delete-item">
+        <span nz-icon nzType="delete" nzTheme="outline"></span> Delete
+      </li>
+    </ul>
+  </nz-dropdown-menu>
+
+  <!-- Status filter dropdown (column header) -->
+  <nz-dropdown-menu #statusMenu="nzDropdownMenu">
+    <div class="status-filter-dropdown">
+      <ul nz-menu>
+        <li nz-menu-item *ngFor="let opt of STATUS_OPTIONS"
+            (click)="statusFilter = opt.value; onStatusChange(); statusDropVisible = false">
+          {{ opt.label }}
+        </li>
+      </ul>
+    </div>
+  </nz-dropdown-menu>
+
+</div><!-- /.sub-page -->
+
+
+<!--
+     ═══════════════════════════════════════════
+     FLOATING OVERLAY DRAWER
+     Sits outside .sub-page so it truly overlays
+     ═══════════════════════════════════════════
+  -->
+
+<!-- Backdrop — click to close -->
+<div
+  class="drawer-backdrop"
+  [class.drawer-backdrop--visible]="isDrawerOpen"
+  (click)="closeDrawer()"
+></div>
+
+<!-- Drawer shell -->
+<div
+  class="drawer"
+  [class.drawer--open]="isDrawerOpen && !drawerClosing"
+  [class.drawer--closing]="drawerClosing"
+>
+  <!-- Details panel -->
+  <app-subscription-details
+    *ngIf="detailsVisible && selectedUnit"
+    [unitName]="selectedUnit"
+    [subscriptionRow]="selectedSub"
+    (close)="closeDetails()"
+    (upgrade)="onUpgrade(selectedSub!)"
+  ></app-subscription-details>
+
+  <!-- Activities panel -->
+  <app-subscription-activities
+    *ngIf="activitiesVisible && selectedUnit"
+    [unitName]="selectedUnit"
+    (close)="closeActivities()"
+  ></app-subscription-activities>
+</div>
+
+<!-- Confirmation dialog -->
+<app-confirmation #confirmDialog></app-confirmation>

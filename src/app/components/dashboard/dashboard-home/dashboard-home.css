@@ -1,0 +1,37 @@
+ /*
+     * :host targets the <app-dashboard-home> custom element itself.
+     * Angular renders components as custom HTML tags which are inline by default —
+     * applying display:flex here turns the host into the flex container.
+     */
+    :host {
+      display: flex;
+      height: 100vh;
+      width: 100vw;
+      overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f8f9fb;
+    }
+
+    /*
+     * Angular custom elements (app-side-nav, app-dashboard-overview) are
+     * rendered as inline elements by default. We must set display + dimensions
+     * on the host element so flex children size correctly.
+     */
+    :host ::ng-deep app-side-nav {
+      display: flex;
+      flex-direction: column;
+      width: 220px;
+      min-width: 220px;
+      max-width: 220px;
+      height: 100vh;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    :host ::ng-deep app-dashboard-overview {
+      display: flex;
+      flex: 1 1 0%;
+      min-width: 0;
+      height: 100vh;
+      overflow: hidden;
+    }

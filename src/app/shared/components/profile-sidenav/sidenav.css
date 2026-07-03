@@ -1,0 +1,259 @@
+/* ═══════════════════════════════════════════════
+   HOST & LAYOUT
+════════════════════════════════════════════════ */
+:host {
+  display: flex;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.app-layout {
+  height: 100vh;
+  background-color: #ffffff;
+}
+
+/* ═══════════════════════════════════════════════
+   SIDEBAR
+════════════════════════════════════════════════ */
+.menu-sidebar {
+  position: relative;
+  z-index: 10;
+  height: 100vh;
+  background-color: #fff !important;
+  box-shadow: 2px 0 6px rgba(0, 21, 41, 0.08);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.menu-sidebar::-webkit-scrollbar { display: none; }
+
+/* Override nz-sider background */
+::ng-deep .menu-sidebar.ant-layout-sider {
+  background: #fff !important;
+}
+::ng-deep .menu-sidebar .ant-layout-sider-children {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+
+/* ═══════════════════════════════════════════════
+   SECTION HEADER  (back arrow + "Accounts" title)
+════════════════════════════════════════════════ */
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px 8px;
+  flex-shrink: 0;
+}
+.section-header.collapsed {
+  justify-content: center;
+  padding: 12px 0 8px;
+}
+
+.back-btn {
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: #555;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background 0.15s, color 0.15s;
+}
+.back-btn:hover {
+  background: #f0f0f0;
+  color: #1677ff;
+}
+.back-icon { font-size: 14px; }
+
+.section-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #888;
+  letter-spacing: 0.02em;
+}
+
+/* ═══════════════════════════════════════════════
+   NAV MENU
+════════════════════════════════════════════════ */
+.nav-menu {
+  border-right: none !important;
+  flex: 0 0 auto;
+}
+
+/* Each menu item row */
+::ng-deep .nav-menu.ant-menu .ant-menu-item {
+  height: 44px;
+  line-height: 44px;
+  margin: 2px 8px !important;
+  border-radius: 8px;
+  padding: 0 12px !important;
+  width: calc(100% - 16px) !important;
+}
+::ng-deep .nav-menu.ant-menu .ant-menu-item:hover {
+  background: #f0f5ff !important;
+}
+/* Active / selected state */
+::ng-deep .nav-menu.ant-menu .ant-menu-item-selected {
+  background: #e6f4ff !important;
+  color: #1677ff !important;
+}
+::ng-deep .nav-menu.ant-menu .ant-menu-item-selected a {
+  color: #1677ff !important;
+  font-weight: 500;
+}
+
+/* Link styling inside items */
+::ng-deep .nav-menu.ant-menu .ant-menu-item a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #333;
+  font-size: 13px;
+  text-decoration: none;
+}
+
+/* RouterLinkActive class */
+.active-link {
+  color: #1677ff !important;
+  font-weight: 500;
+}
+
+/* Collapsed: center icons */
+::ng-deep .nav-menu.ant-menu-inline-collapsed .ant-menu-item {
+  padding: 0 !important;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+::ng-deep .nav-menu.ant-menu-inline-collapsed .ant-menu-item .anticon {
+  font-size: 16px;
+  margin: 0;
+}
+
+/* ═══════════════════════════════════════════════
+   SPACER
+════════════════════════════════════════════════ */
+.spacer { flex: 1; }
+
+/* ═══════════════════════════════════════════════
+   LOGOUT BUTTON
+════════════════════════════════════════════════ */
+.logout-wrap {
+  padding: 12px 16px;
+  flex-shrink: 0;
+}
+.logout-wrap.collapsed {
+  display: flex;
+  justify-content: center;
+  padding: 12px 0;
+}
+
+.logout-btn {
+  width: 100%;
+  height: 38px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #1677ff !important;
+  border-color: #1677ff !important;
+}
+/* Collapsed: icon-only square */
+.logout-wrap.collapsed .logout-btn {
+  width: 38px;
+  padding: 0;
+}
+
+/* ═══════════════════════════════════════════════
+   COLLAPSE TRIGGER
+════════════════════════════════════════════════ */
+.collapse-trigger {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 18px;
+  border-top: 1px solid #f0f0f0;
+  cursor: pointer;
+  color: #555;
+  font-size: 13px;
+  user-select: none;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.collapse-trigger:hover {
+  background: #f5f5f5;
+  color: #1677ff;
+}
+/* Collapsed: center icon */
+::ng-deep .ant-layout-sider-collapsed ~ * .collapse-trigger,
+.collapse-trigger.collapsed-mode {
+  justify-content: center;
+  padding: 12px 0;
+}
+
+/* Target collapse-trigger when sidebar IS collapsed */
+::ng-deep .ant-layout-sider-collapsed .collapse-trigger {
+  justify-content: center;
+  padding: 12px 0;
+}
+
+.trigger-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+.trigger-label {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* ═══════════════════════════════════════════════
+   TOP HEADER  (unchanged from original)
+════════════════════════════════════════════════ */
+.header-trigger {
+  height: 64px;
+  padding: 20px 24px;
+  font-size: 20px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.trigger:hover { color: #1677ff; }
+
+nz-header {
+  padding: 0;
+  width: 100%;
+  z-index: 2;
+}
+.app-header {
+  position: relative;
+  height: 64px;
+  padding: 0;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0, 21, 41, 0.08);
+}
+
+/* ═══════════════════════════════════════════════
+   INNER CONTENT  (unchanged from original)
+════════════════════════════════════════════════ */
+.inner-content {
+  padding: 0;
+  background: #f5f5f5;
+  height: 97%;
+  flex-grow: 1;
+  overflow-y: auto;
+  margin: 0;
+  border-radius: 5px;
+}

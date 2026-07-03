@@ -1,0 +1,94 @@
+ <div class="dashboard-wrapper">
+      <!-- Main Content -->
+      <div class="dashboard-main">
+        <!-- Top Bar -->
+        <div class="top-bar">
+          <div></div>
+          <div class="top-actions">
+            <nz-badge [nzCount]="9" nzSize="small">
+              <button nz-button nzType="text" nzShape="circle" class="icon-btn">
+                <span nz-icon nzType="message" nzTheme="outline"></span>
+              </button>
+            </nz-badge>
+            <nz-badge [nzCount]="9" nzSize="small">
+              <button nz-button nzType="text" nzShape="circle" class="icon-btn">
+                <span nz-icon nzType="bell" nzTheme="outline"></span>
+              </button>
+            </nz-badge>
+          </div>
+        </div>
+
+        <!-- Page Header -->
+        <div class="page-header">
+          <h2 class="page-title">Dashboard overview</h2>
+          <p class="page-subtitle">All units Data</p>
+        </div>
+
+        <div class="content-scroll">
+          <!-- Key Metrics Section -->
+          <section class="section-card">
+            <div class="section-title">
+              <span class="section-bar"></span>
+              Key Metrics
+            </div>
+            <div class="empty-state-box">
+              <span nz-icon nzType="hdd" nzTheme="outline" class="empty-icon"></span>
+              <p class="empty-title">No systems configured yet</p>
+              <p class="empty-sub">Metrics will appear here once you add monitoring systems</p>
+            </div>
+          </section>
+
+          <!-- Systems in this unit -->
+          <section class="section-card">
+            <div class="section-header-row">
+              <div class="section-title">
+                <span class="section-bar"></span>
+                Systems in this unit
+              </div>
+              <button nz-button nzType="primary" class="add-system-btn">
+                <span nz-icon nzType="plus" nzTheme="outline"></span>
+                Add System
+              </button>
+            </div>
+            <div class="empty-state-box large">
+              <span nz-icon nzType="inbox" nzTheme="outline" class="empty-icon large"></span>
+              <p class="empty-title bold">No Systems Yet</p>
+              <p class="empty-sub">This unit doesn't have any monitoring systems configured.<br>Create your first system to start monitoring data.</p>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <!-- Right Panel -->
+      <aside class="right-panel">
+        <!-- Top Tabs -->
+        <div class="right-tabs">
+          <button class="rtab active">
+            <span nz-icon nzType="file-text" nzTheme="outline"></span>
+            <span>Summary</span>
+          </button>
+          <button class="rtab">
+            <span nz-icon nzType="clock-circle" nzTheme="outline"></span>
+            <span>Activities Log</span>
+          </button>
+          <button class="rtab">
+            <span nz-icon nzType="team" nzTheme="outline"></span>
+            <span>Collaboration</span>
+          </button>
+        </div>
+
+        <!-- Summary Empty State -->
+        <div class="right-empty">
+          <span nz-icon nzType="inbox" nzTheme="outline" class="right-empty-icon"></span>
+          <p class="right-empty-title">No Systems Yet</p>
+          <p class="right-empty-sub">This unit doesn't have any monitoring systems configured.Create your first system to start monitoring data.</p>
+        </div>
+
+        <div class="right-footer">
+          <button nz-button nzType="default" class="analysis-btn">
+            <span nz-icon nzType="bar-chart" nzTheme="outline"></span>
+            All Analysis Reports
+          </button>
+        </div>
+      </aside>
+    </div>

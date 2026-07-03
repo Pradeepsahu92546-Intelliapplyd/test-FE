@@ -1,0 +1,39 @@
+<div class="panel">
+  <!-- Header -->
+  <div class="panel-header">
+    <span class="panel-title">Recent Activities - {{ unitName }}</span>
+    <button class="close-btn" (click)="close.emit()">
+      <span nz-icon nzType="close" nzTheme="outline"></span>
+    </button>
+  </div>
+
+  <!-- Empty -->
+  <div
+    class="panel-body empty-state"
+    *ngIf="!isLoading && activities.length === 0"
+  >
+    <span nz-icon nzType="inbox" nzTheme="outline" class="empty-icon"></span>
+    <p>No recent activities found.</p>
+  </div>
+
+  <!-- Activity Timeline -->
+  <div class="panel-body" *ngIf="!isLoading && activities.length > 0">
+    <nz-timeline>
+      <nz-timeline-item
+        *ngFor="let act of activities"
+        [nzColor]="getDotColor(act.description)"
+      >
+        <div class="activity-item">
+          <div class="activity-title">{{ getTitle(act.description) }}</div>
+          <div class="activity-desc">{{ act.description }}</div>
+          <div class="activity-meta">
+            <span class="activity-time">{{ formatDate(act.activityTime) }}</span>
+            <span class="activity-by" *ngIf="act.commentedBy"
+              >· {{ act.commentedBy }}</span
+            >
+          </div>
+        </div>
+      </nz-timeline-item>
+    </nz-timeline>
+  </div>
+</div>

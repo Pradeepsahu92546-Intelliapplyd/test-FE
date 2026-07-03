@@ -1,0 +1,30 @@
+/* Modal Header styling */
+:host ::ng-deep .ant-modal-header {
+  border-bottom: 1px solid #f0f0f0;
+  padding: 16px 24px;
+}
+
+/* Modal Content padding */
+:host ::ng-deep .ant-modal-body {
+  padding: 24px;
+}
+
+/* Input styling to match the screenshot height/border */
+input[nz-input] {
+  height: 40px;
+  border-color: #d9d9d9;
+}
+
+/* Switch color if you want to match the exact grey/blue */
+:host ::ng-deep .ant-switch-checked {
+  background-color: #1890ff; 
+}
+
+/* Footer buttons height */
+button {
+  height: 38px;
+  border-radius: 2px;
+}
+
+
+

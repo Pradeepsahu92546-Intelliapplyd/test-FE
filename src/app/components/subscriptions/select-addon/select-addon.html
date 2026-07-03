@@ -1,0 +1,211 @@
+<div class="min-h-screen bg-gray-50">
+  <!-- Top bar: Back + Steps -->
+  <div class="bg-neutral-800 text-white w-full">
+    <div class="max-w-6xl py-3 flex gap-10">
+      <div class="flex items-left w-[10%] mr-auto px-4">
+        <button
+          nz-button
+          nzType="link"
+          class="!text-white !px-0 contain"
+          (click)="goBack()"
+        >
+          Back
+        </button>
+      </div>
+
+      <div class="flex w-[60%] justify-center">
+        <nz-steps [nzCurrent]="0" nzSize="small" class="flex-1">
+          <nz-step nzTitle="Select addons" class="!text-white"></nz-step>
+          <nz-step nzTitle="payment details" class="!text-white"></nz-step>
+          <nz-step nzTitle="order summary" class="!text-white"></nz-step>
+        </nz-steps>
+      </div>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div class="max-w-6xl px-[10%] py-12 grid grid-cols-2">
+    <!-- Left: Summary card -->
+    <div class="bg-white rounded-xl shadow md:p-5 min-w-[360px] max-w-[360px]">
+      <h3 class="text-lg font-semibold">You select pro plan</h3>
+
+      <div class="mt-4 space-y-4">
+        <!-- Organization -->
+        <div>
+          <label class="text-sm text-gray-600 mb-1 block">select organization</label>
+          <nz-select
+            [(ngModel)]="selectedOrg"
+            nzPlaceHolder="select organization"
+            class="w-full"
+          >
+            @for (org of orgs; track org) {
+              <nz-option [nzLabel]="org" [nzValue]="org"></nz-option>
+            }
+          </nz-select>
+        </div>
+
+        <!-- Auto renewal -->
+        <div class="flex items-center justify-between">
+          <span class="text-sm text-gray-600">Auto renewal</span>
+          <nz-switch [(ngModel)]="autoRenew"></nz-switch>
+        </div>
+
+        <!-- Billing period -->
+        <div class="flex gap-2">
+          <label class="sr-only">Billing period</label>
+          <button
+            nz-button
+            [nzType]="'default'"
+            [ngClass]="period() === 'monthly' ? 'border-blue-500 text-blue-600' : ''"
+            class="flex-1"
+            (click)="period.set('monthly')"
+          >
+            monthly
+          </button>
+          <button
+            nz-button
+            [nzType]="'default'"
+            [ngClass]="period() === 'annual' ? 'border-blue-500 text-blue-600' : ''"
+            class="flex-1"
+            (click)="period.set('annual')"
+          >
+            Annual ( save 25 % )
+          </button>
+        </div>
+
+        <nz-divider></nz-divider>
+
+        <!-- Lines -->
+        <div class="text-sm flex justify-between">
+          <span>Pro plan</span>
+          <span>₹ {{ proLine() | number : "1.0-0" }}</span>
+        </div>
+        <div class="text-xs text-gray-500">
+          ₹ {{ proMonthly | number : "1.0-0" }} /mo ×
+          {{ period() === "annual" ? "12 mo" : "1 mo" }}
+        </div>
+
+        <!-- Addons -->
+        <div class="mt-3 text-sm font-medium">Addons</div>
+        <div class="mt-2 space-y-1">
+          @for (line of detailAddons(); track line) {
+            <div class="flex justify-between text-sm">
+              <div class="text-xs text-gray-500">
+                ₹ {{ line.unit | number : "1.0-0" }} × {{ line.qty }} ×
+                {{ period() === "annual" ? "12 mo" : "1 mo" }}
+              </div>
+              <span>₹ {{ line.total | number : "1.0-0" }}</span>
+            </div>
+          }
+        </div>
+
+        <nz-divider></nz-divider>
+
+        <div class="text-sm flex justify-between font-medium">
+          <span>Subtotal</span>
+          <span>₹ {{ subtotal() | number : "1.0-0" }}</span>
+        </div>
+        <div class="text-xs text-gray-500">
+          see your total (include tax) in final page
+        </div>
+
+        <button nz-button nzType="primary" class="w-full mt-4" (click)="next()">
+          Next : Review your order
+        </button>
+      </div>
+    </div>
+
+    <!-- Right: Add-ons list -->
+    <div class="bg-white rounded-xl shadow p-0 min-w-[850px]">
+      <div class="px-4 py-4">
+        <h3 class="text-sm font-normal text-[#262626]">
+          Select addons to push your limit as per your requirement
+        </h3>
+      </div>
+
+      <!-- Table -->
+      <div class="grid grid-cols-[1fr,1fr,160px] px-5 py-2 text-sm text-gray-500">
+        <nz-table
+          nzTemplateMode
+          [nzShowPagination]="false"
+          [nzBordered]="false"
+          class="!bg-transparent"
+          [nzWidthConfig]="['auto', 'auto', '160px']"
+        >
+          <thead>
+            <tr>
+              <th class="!px-5 !py-3 !font-normal !pr-8">Addons</th>
+              <th class="!px-5 !py-3 !font-normal !pr-8">includes</th>
+              <th class="!px-5 !py-3 !font-normal !pr-8">Quantity</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (a of addons; track a.id) {
+              <tr class="align-middle">
+                <!-- Addon meta -->
+                <td class="!px-5 !py-3">
+                  <div class="flex items-center gap-3">
+                    <span
+                      class="w-12 h-12 rounded-full bg-[#0A56EE] text-white grid place-items-center"
+                    >
+                      <span nz-icon nzType="diff" nzTheme="outline" class="text-2xl"></span>
+                    </span>
+                    <div>
+                      <div class="font-medium">{{ a.name }}</div>
+                      <div class="text-xs text-gray-500">
+                        ₹ {{ a.pricePerMonth | number : "1.0-0" }} /mo
+                      </div>
+                    </div>
+                  </div>
+                </td>
+
+                <!-- Details -->
+                <td class="!px-5 !py-3 text-sm text-gray-600">
+                  {{ a.details }}
+                </td>
+
+                <!-- Quantity controls -->
+                <td class="!px-5 !py-3">
+                  <div class="flex items-center justify-center gap-2 pr-2">
+                    @if (getQty(a.id) === 0) {
+                      <button
+                        nz-button
+                        nzType="primary"
+                        nzSize="small"
+                        (click)="add(a.id)"
+                      >
+                        <span nz-icon nzType="plus"></span>
+                      </button>
+                    } @else {
+                      <nz-select
+                        [ngModel]="getQty(a.id)"
+                        (ngModelChange)="setQty(a.id, $event)"
+                        class="w-28"
+                      >
+                        @for (q of qtyOptions; track q) {
+                          <nz-option [nzLabel]="q" [nzValue]="q"></nz-option>
+                        }
+                      </nz-select>
+
+                      <button
+                        nz-button
+                        nzDanger
+                        nzShape="circle"
+                        nzSize="small"
+                        (click)="remove(a.id)"
+                        nz-tooltip
+                        nzTooltipTitle="Remove"
+                      >
+                        <span nz-icon nzType="delete"></span>
+                      </button>
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </nz-table>
+      </div>
+    </div>
+  </div>
+</div>
