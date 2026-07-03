@@ -1,16 +1,17 @@
-// import { TestBed } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
 
-// import { CollaboratorService } from './collaborator-service';
+import { CollaboratorService } from './collaborator-service';
 
-// describe('CollaboratorService', () => {
-//   let service: CollaboratorService;
+describe('CollaboratorService', () => {
+  let service: CollaboratorService;
 
-//   beforeEach(() => {
-//     TestBed.configureTestingModule({});
-//     service = TestBed.inject(CollaboratorService);
-//   });
+  beforeEach(() => {
+    TestBed.configureTestingModule({ imports: [HttpClientTestingModule] });
+    service = TestBed.inject(CollaboratorService);
+  });
 
-//   it('should be created', () => {
-//     expect(service).toBeTruthy();
-//   });
-// });
+  it('should be created', () => {
+    expect(service).toBeTruthy();
+  });
+});
