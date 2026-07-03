@@ -21,5 +21,10 @@ describe('AuthShell', () => {
 
   it('should create', () => {
     expect(component).toBeTruthy();
+    expect(component).toBeDefined();
   });
+
+  it('failed test case',() => {
+    expect(component).toBeFalsy();
+  }); 
 });
