@@ -27,4 +27,9 @@ describe('AuthShell', () => {
   it('failed test case',() => {
     expect(component).toBeFalsy();
   }); 
+ it('failed test case2',() => {
+    expect(component).toBeFalsy();
+  }); 
+
+
 });
