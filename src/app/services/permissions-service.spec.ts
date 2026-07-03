@@ -1,16 +1,17 @@
-// import { TestBed } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
 
-// import { PermissionsService } from './permissions-service';
+import { PermissionsService } from './permissions-service';
 
-// describe('PermissionsService', () => {
-//   let service: PermissionsService;
+describe('PermissionsService', () => {
+  let service: PermissionsService;
 
-//   beforeEach(() => {
-//     TestBed.configureTestingModule({});
-//     service = TestBed.inject(PermissionsService);
-//   });
+  beforeEach(() => {
+    TestBed.configureTestingModule({ imports: [HttpClientTestingModule] });
+    service = TestBed.inject(PermissionsService);
+  });
 
-//   it('should be created', () => {
-//     expect(service).toBeTruthy();
-//   });
-// });
+  it('should be created', () => {
+    expect(service).toBeTruthy();
+  });
+});

@@ -1,16 +1,17 @@
-// import { TestBed } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
 
-// import { PincodeService } from './pincode-service';
+import { PincodeService } from './pincode-service';
 
-// describe('PincodeService', () => {
-//   let service: PincodeService;
+describe('PincodeService', () => {
+  let service: PincodeService;
 
-//   beforeEach(() => {
-//     TestBed.configureTestingModule({});
-//     service = TestBed.inject(PincodeService);
-//   });
+  beforeEach(() => {
+    TestBed.configureTestingModule({ imports: [HttpClientTestingModule] });
+    service = TestBed.inject(PincodeService);
+  });
 
-//   it('should be created', () => {
-//     expect(service).toBeTruthy();
-//   });
-// });
+  it('should be created', () => {
+    expect(service).toBeTruthy();
+  });
+});
