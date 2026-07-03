@@ -12,6 +12,7 @@ import { NzDividerModule } from 'ng-zorro-antd/divider';
 })
 export class AuthShell {
   tabIndex = signal(0);
+  tabs = [];
 }
 
 
